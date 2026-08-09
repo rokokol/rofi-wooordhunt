@@ -2,9 +2,25 @@
 
 set -euo pipefail
 
-# Everything here is Cyrillic, IPA and emoji, and the wrapping counts characters —
-# under a C locale fold and ${#s} count bytes instead and the layout collapses
-export LC_ALL="${ROFI_WOOORDHUNT_LOCALE:-C.UTF-8}"
+# Everything here is Cyrillic, IPA and emoji, and the wrapping counts characters — under
+# a C locale fold and ${#s} count bytes instead and the layout collapses. Which UTF-8
+# locale exists is not something to assume: setlocale silently keeps the old one when the
+# name is unknown, so ask a two-byte character how long it is and take the first that
+# answers 1. Everything downstream is a child process sharing this LC_ALL
+# Asked of a child process on purpose: bash keeps its own locale when setlocale rejects a
+# name, but still exports the rejected one, so only a child reports what fold will see
+utf8_ready() {
+  (($(printf 'ä' | wc -m) == 1))
+}
+[[ -n "${ROFI_WOOORDHUNT_LOCALE:-}" ]] && export LC_ALL="$ROFI_WOOORDHUNT_LOCALE"
+if ! utf8_ready; then
+  # Nothing to restore if none of them takes: an unknown name leaves glibc in C, which
+  # is where we already were
+  for loc in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
+    export LC_ALL="$loc"
+    utf8_ready && break
+  done
+fi
 
 INPUT="$*"
 SENTINEL_NOOP="__wooordhunt_noop__"
@@ -31,6 +47,7 @@ Type a word in either direction; Enter copies the highlighted entry. Environment
   ROFI_WOOORDHUNT_TIMEOUT      per-request timeout in seconds (default: 5)
   ROFI_WOOORDHUNT_WRAP_WIDTH   wrap width of the indented hint lines (default: 54)
   ROFI_WOOORDHUNT_HEAD_WIDTH   width the word line may reach before the gloss drops below (default: 58)
+  ROFI_WOOORDHUNT_LOCALE       locale the wrapping counts characters in (default: the first UTF-8 one that works)
 EOF
 }
 

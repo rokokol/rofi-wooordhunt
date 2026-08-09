@@ -114,7 +114,7 @@ Every Home Manager option above is an environment variable underneath, so the sa
 | `ROFI_WOOORDHUNT_HEAD_WIDTH` | width the word line may reach before its gloss drops below |
 | `ROFI_WOOORDHUNT_TIMEOUT` | per-request timeout in seconds |
 | `ROFI_WOOORDHUNT_URL` | the site root, for pointing the modi at a mirror or a fixture tree |
-| `ROFI_WOOORDHUNT_LOCALE` | the locale the wrapping counts characters in, `C.UTF-8` by default |
+| `ROFI_WOOORDHUNT_LOCALE` | the locale the wrapping counts characters in; unset, the modi takes the first UTF-8 locale the machine actually answers to |
 
 The wrapping is ours because **rofi rows are single-line**: text that does not fit is truncated with `…`, never wrapped, so a long explanation has to be broken into rows by hand. That makes both widths a function of your window width — the defaults are for 720px
 
@@ -138,7 +138,7 @@ Homographs are why that block is walked rather than grepped: `transfer` is two w
 ## Tests
 
 ```sh
-tests/run.sh              # 17 checks, no network
+tests/run.sh              # 18 checks, no network
 tests/run.sh --update     # re-record the golden output after a deliberate change
 tests/live.sh             # the same questions, asked of the real site
 ```

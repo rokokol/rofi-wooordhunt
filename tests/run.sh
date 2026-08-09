@@ -85,6 +85,16 @@ if diff -q "$GOLDEN/ru-sections.txt" \
   echo "  ✓ layout survives LC_ALL=C"
 else
   fail "LC_ALL=C: the layout follows the session locale"
+  # The one thing worth knowing next: which UTF-8 locale the machine could have given it
+  printf '      locales available: %s\n' "$(locale -a 2>/dev/null | grep -i utf | tr '\n' ' ')"
+fi
+
+# …and a locale name this machine does not have must not take the layout with it
+if diff -q "$GOLDEN/ru-sections.txt" \
+  <(ROFI_WOOORDHUNT_LOCALE=zz_ZZ.bogus ROFI_RETV=1 "$MODI" риск | readable) >/dev/null; then
+  echo "  ✓ an unusable locale falls back"
+else
+  fail "an unusable locale: the layout went with it"
 fi
 
 echo "protocol"
