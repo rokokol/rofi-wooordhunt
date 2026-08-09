@@ -1,0 +1,11 @@
+# Which saved page the stub curl serves for which site path. Anything not listed 404s,
+# which is also how a real miss looks — the transcription lookups in the RU->EN case
+# deliberately hit both, so the golden output covers a word with and without one
+переводы/экзамен	ekzamen.html
+переводы/риск	risk.html
+word/house	house.html
+word/transfer	transfer.html
+word/give_up	give-up.html
+word/эй_там	ey-tam.html
+word/risk	risk-word.html
+word/danger	danger.html

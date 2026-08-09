@@ -1,0 +1,3 @@
+@prompt|🤓
+@message|Nothing found: zzzqqqxxnope (╯°□°）╯︵ ┻━┻
+---@info|__wooordhunt_noop__

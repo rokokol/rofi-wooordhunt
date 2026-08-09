@@ -1,0 +1,17 @@
+name: upstream
+
+# The saved pages can be parsed forever after the site has stopped looking like them.
+# This is the only job that goes near the network, on a schedule rather than on a push,
+# so a wooordhunt redesign shows up as a red run instead of as an empty rofi window
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c ./tests/live.sh

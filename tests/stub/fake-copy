@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Stands in for wl-copy: the picked entry lands in $COPIED instead of the clipboard
+set -euo pipefail
+
+cat >>"$COPIED"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Answers by site path from $FIXTURES/routes, so a wrong slug — a space left
+# unescaped, say — shows up as a 404 instead of a silent hit on the wrong page.
+# Two reserved slugs stand in for the failures a saved page cannot express
+set -euo pipefail
+
+url="${*: -1}"
+path=${url#*://}
+path=${path#*/}
+
+case "$path" in
+  word/__timeout__ | переводы/__timeout__) exit 28 ;;
+  word/__boom__ | переводы/__boom__) exit 7 ;;
+esac
+
+file=$(grep -v '^#' "$FIXTURES/routes" | awk -F'\t' -v p="$path" '$1 == p { print $2 }')
+[[ -n "$file" ]] || exit 22
+cat "$FIXTURES/$file"

@@ -1,0 +1,34 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix build --no-write-lock-file .#rofi-wooordhunt
+      # tests, package-smoke, package-settings, module-wiring, scripts-lint
+      - run: nix flake check --no-write-lock-file
+      # The script must stay usable without Nix: install.sh puts it behind a symlink,
+      # and the suite has to pass against the installed copy
+      - name: install.sh works
+        run: |
+          PREFIX=$PWD/out ./install.sh
+          test -L out/bin/rofi-wooordhunt
+          nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq \
+            -c env ROFI_WOOORDHUNT=$PWD/out/bin/rofi-wooordhunt ./tests/run.sh
+      - run: nix fmt -- --ci
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix run nixpkgs#shellcheck -- install.sh rofi-wooordhunt.sh tests/run.sh tests/stub/*
+      - run: nix run nixpkgs#shfmt -- -d -i 2 -ci install.sh rofi-wooordhunt.sh tests/run.sh tests/stub/*

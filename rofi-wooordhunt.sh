@@ -2,12 +2,43 @@
 
 set -euo pipefail
 
+# Everything here is Cyrillic, IPA and emoji, and the wrapping counts characters —
+# under a C locale fold and ${#s} count bytes instead and the layout collapses
+export LC_ALL="${ROFI_WOOORDHUNT_LOCALE:-C.UTF-8}"
+
 INPUT="$*"
 SENTINEL_NOOP="__wooordhunt_noop__"
+BASE_URL="${ROFI_WOOORDHUNT_URL:-https://wooordhunt.ru}"
+COPY_CMD="${ROFI_WOOORDHUNT_COPY:-wl-copy}"
+PROMPT="${ROFI_WOOORDHUNT_PROMPT:-🤓}"
+TIMEOUT="${ROFI_WOOORDHUNT_TIMEOUT:-5}"
 # Wrap widths (in characters) for a 720px window: WRAP_WIDTH — for indented hint
 # lines, HEAD_MAX — for the "word+gloss" line before it wraps below
-WRAP_WIDTH=54
-HEAD_MAX=58
+WRAP_WIDTH="${ROFI_WOOORDHUNT_WRAP_WIDTH:-54}"
+HEAD_MAX="${ROFI_WOOORDHUNT_HEAD_WIDTH:-58}"
+
+usage() {
+  cat <<EOF
+rofi-wooordhunt — a rofi script-modi translating through wooordhunt.ru
+
+  rofi -show dictionary -modi "dictionary:$(basename "$0")"
+
+Type a word in either direction; Enter copies the highlighted entry. Environment:
+
+  ROFI_WOOORDHUNT_PROMPT       rofi mode name (default: 🤓)
+  ROFI_WOOORDHUNT_COPY         clipboard command fed on stdin (default: wl-copy)
+  ROFI_WOOORDHUNT_URL          site root (default: https://wooordhunt.ru)
+  ROFI_WOOORDHUNT_TIMEOUT      per-request timeout in seconds (default: 5)
+  ROFI_WOOORDHUNT_WRAP_WIDTH   wrap width of the indented hint lines (default: 54)
+  ROFI_WOOORDHUNT_HEAD_WIDTH   width the word line may reach before the gloss drops below (default: 58)
+EOF
+}
+
+# rofi always exports ROFI_RETV, so --help can only come from a real shell
+if [[ -z "${ROFI_RETV:-}" && ("$INPUT" == "--help" || "$INPUT" == "-h") ]]; then
+  usage
+  exit 0
+fi
 
 print_message() {
   printf '\0message\x1f%s\n' "$1"
@@ -38,10 +69,15 @@ print_hint_lines() {
 
 if [[ -n "${ROFI_INFO:-}" ]]; then
   if [[ "$ROFI_INFO" != "$SENTINEL_NOOP" ]]; then
-    printf '%s' "$ROFI_INFO" | wl-copy
+    # Unquoted on purpose — the setting carries its own flags (e.g. "xclip -selection clipboard")
+    # shellcheck disable=SC2086
+    printf '%s' "$ROFI_INFO" | $COPY_CMD
   fi
   exit 0
 fi
+
+# Naming the mode here keeps the modi self-contained — nothing to declare in rofi's config
+printf '\0prompt\x1f%s\n' "$PROMPT"
 
 if [[ -z "$INPUT" ]]; then
   print_message "Wooordhunt ultra parser （´ω｀♡%）"
@@ -55,7 +91,7 @@ PARSED_INPUT="${ORIGINAL_INPUT,,}"
 URL_SLUG="${PARSED_INPUT// /_}"
 
 fetch_html() {
-  curl -fsSL --max-time 5 "$1" 2>/dev/null
+  curl -fsSL --max-time "$TIMEOUT" "$1" 2>/dev/null
 }
 
 # Parse the pronunciation block of a word page into lines, one per pronounced form:
@@ -100,9 +136,9 @@ format_transcriptions() {
   count=$(printf '%s\n' "$rows" | grep -c . || true)
   while IFS=$'\t' read -r us uk pos; do
     case "$mode" in
-    head) val="${us:-$uk}" ;;
-    us) val="$us" ;;
-    uk) val="$uk" ;;
+      head) val="${us:-$uk}" ;;
+      us) val="$us" ;;
+      uk) val="$uk" ;;
     esac
     val=$(printf '%s' "$val" | xargs)
     [[ -z "$val" ]] && continue
@@ -117,22 +153,22 @@ format_transcriptions() {
 # a fallback. Annotates RU->EN results that lack it
 fetch_transcription() {
   local slug="${1// /_}" html
-  html=$(curl -fsSL --max-time 4 "https://wooordhunt.ru/word/${slug}" 2>/dev/null || true)
+  html=$(fetch_html "${BASE_URL}/word/${slug}" || true)
   format_transcriptions "$(parse_transcriptions "$html")" head
 }
 
 HTML=""
-if HTML=$(fetch_html "https://wooordhunt.ru/переводы/${URL_SLUG}"); then
+if HTML=$(fetch_html "${BASE_URL}/переводы/${URL_SLUG}"); then
   :
 else
-  if HTML=$(fetch_html "https://wooordhunt.ru/word/${URL_SLUG}"); then
+  if HTML=$(fetch_html "${BASE_URL}/word/${URL_SLUG}"); then
     :
   else
     last_status=$?
     case "$last_status" in
-    22) print_message "Nothing found: ${PARSED_INPUT} (╯°□°）╯︵ ┻━┻" ;;
-    28) print_message "Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬" ;;
-    *) print_message "Failed to get a response from Wooordhunt |_・)" ;;
+      22) print_message "Nothing found: ${PARSED_INPUT} (╯°□°）╯︵ ┻━┻" ;;
+      28) print_message "Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬" ;;
+      *) print_message "Failed to get a response from Wooordhunt |_・)" ;;
     esac
     print_fallback_entry
     exit 0
@@ -145,7 +181,9 @@ TRANSCRIPTION_UK=$(format_transcriptions "$TR_ROWS" uk)
 
 if [[ -n "$TRANSCRIPTION_US" || -n "$TRANSCRIPTION_UK" ]]; then
   print_message "🇺🇸: ${TRANSCRIPTION_US} // 🇬🇧: ${TRANSCRIPTION_UK}"
-elif [[ "$PARSED_INPUT" =~ [а-яА-ЯёЁ] ]]; then
+# Anything outside printable ASCII means the query was not an English word. A а-я range
+# would say the same, but ranges need a collation the C.UTF-8 locale above does not carry
+elif [[ "$PARSED_INPUT" == *[^\ -~]* ]]; then
   print_message "🇷🇺: ${ORIGINAL_INPUT} （´ω｀♡%）"
 fi
 

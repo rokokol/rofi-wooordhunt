@@ -1,0 +1,26 @@
+@prompt|🤓
+@message|🇷🇺: риск （´ω｀♡%）
+risk |rɪsk| — риск, опасность, вероятность убытков@info|risk
+   Основное и самое общее слово для обозначения ‘риска’.@info|risk|nonselectable|true
+   Описывает ситуацию, в которой существует вероятность@info|risk|nonselectable|true
+   потери, ущерба или другого негативного исхода.@info|risk|nonselectable|true
+danger |ˈdeɪndʒər| — опасность, угроза@info|danger
+   Ситуация, в которой существует возможность вреда,@info|danger|nonselectable|true
+   боли или ущерба.@info|danger|nonselectable|true
+jeopardy — опасность, риск, угроза@info|jeopardy
+   Более формальный синоним слова ‘risk’ или ‘danger’.@info|jeopardy|nonselectable|true
+   Обозначает опасность потери, вреда или неудачи, часто@info|jeopardy|nonselectable|true
+   когда на кону стоит что-то ценное. Особенно часто@info|jeopardy|nonselectable|true
+   встречается в выражении ‘in jeopardy’ (под угрозой).@info|jeopardy|nonselectable|true
+venture — рискованное предприятие, авантюра, начинание@info|venture
+   Обозначает не сам риск, а ‘рискованное предприятие’,@info|venture|nonselectable|true
+   проект или дело. Это действие или начинание, которое@info|venture|nonselectable|true
+   сопряжено с риском, но предпринято в надежде на успех@info|venture|nonselectable|true
+   или прибыль.@info|venture|nonselectable|true
+chance — шанс, риск, возможность, случайность@info|chance
+   Возможность чего-либо, когда результат неясен;@info|chance|nonselectable|true
+   решение пойти на что-то с неопределенным исходом.@info|chance|nonselectable|true
+gamble — риск, ставка, авантюра, азартная игра@info|gamble
+   Действие с большой неопределенностью, похожее на@info|gamble|nonselectable|true
+   азартную игру, где можно либо много выиграть, либо@info|gamble|nonselectable|true
+   все потерять.@info|gamble|nonselectable|true

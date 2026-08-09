@@ -1,0 +1,53 @@
+@prompt|🤓
+@message|🇷🇺: экзамен （´ω｀♡%）
+exam — экзамен, контрольная работа@info|exam
+   Наиболее часто используемое, универсальное слово для@info|exam|nonselectable|true
+   обозначения официальной проверки знаний, обычно в@info|exam|nonselectable|true
+   конце учебного курса или семестра.@info|exam|nonselectable|true
+examination — экзамен, проверка, аттестация@info|examination
+   Более формальный и полный синоним слова ‘exam’. Часто@info|examination|nonselectable|true
+   используется в официальных документах, расписаниях и@info|examination|nonselectable|true
+   в академической среде. Обозначает серьезную и@info|examination|nonselectable|true
+   подробную проверку знаний.@info|examination|nonselectable|true
+test — тест, контрольная работа, проверочная работа@info|test
+   Обычно это менее объемная и формальная проверка@info|test|nonselectable|true
+   знаний, чем ‘exam’. ‘Test’ может проводиться в@info|test|nonselectable|true
+   течение всего учебного года для оценки усвоения@info|test|nonselectable|true
+   материала. В американском английском ‘test’ и ‘exam’@info|test|nonselectable|true
+   часто взаимозаменяемы.@info|test|nonselectable|true
+quiz@info|quiz
+   тест, викторина, короткая проверочная работа, летучка@info|quiz|nonselectable|true
+   Короткая и часто неофициальная проверка знаний,@info|quiz|nonselectable|true
+   обычно по небольшому объему материала. ‘Quiz’ короче,@info|quiz|nonselectable|true
+   чем ‘test’, и может быть даже устным.@info|quiz|nonselectable|true
+assessment — оценка, аттестация, оценивание, проверка@info|assessment
+   Широкий термин для любого метода оценки знаний или@info|assessment|nonselectable|true
+   навыков студента, который может включать в себя@info|assessment|nonselectable|true
+   тесты, проекты, эссе и другие задания.@info|assessment|nonselectable|true
+finals — выпускные экзамены, итоговые экзамены, сессия@info|finals
+   Собирательное название для серии выпускных или@info|finals|nonselectable|true
+   сессионных экзаменов в конце семестра или учебного@info|finals|nonselectable|true
+   года. Используется во множественном числе.@info|finals|nonselectable|true
+midterm@info|midterm
+   промежуточный экзамен, экзамен за полугодие, рубежный@info|midterm|nonselectable|true
+   контроль@info|midterm|nonselectable|true
+   Экзамен, который проводится в середине учебного@info|midterm|nonselectable|true
+   семестра или курса для оценки промежуточных знаний.@info|midterm|nonselectable|true
+paper@info|paper
+   письменная работа, экзаменационный билет, часть@info|paper|nonselectable|true
+   экзамена@info|paper|nonselectable|true
+   В контексте экзаменов, ‘paper’ означает письменную@info|paper|nonselectable|true
+   экзаменационную работу или один из нескольких@info|paper|nonselectable|true
+   письменных экзаменов по предмету (например, ‘Paper@info|paper|nonselectable|true
+   1’, ‘Paper 2’).@info|paper|nonselectable|true
+oral — устный экзамен, собеседование@info|oral
+   Устный экзамен. Часто используется как прилагательное@info|oral|nonselectable|true
+   (‘oral exam’) или как существительное для обозначения@info|oral|nonselectable|true
+   самого экзамена.@info|oral|nonselectable|true
+viva@info|viva
+   устный экзамен, защита диссертации, защита дипломной@info|viva|nonselectable|true
+   работы@info|viva|nonselectable|true
+   Формальный устный экзамен, особенно в британских@info|viva|nonselectable|true
+   университетах, который проводится для защиты@info|viva|nonselectable|true
+   диссертации (PhD) или дипломной работы. Сокращение от@info|viva|nonselectable|true
+   ‘viva voce’ (лат. ‘живым голосом’).@info|viva|nonselectable|true

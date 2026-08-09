@@ -1,0 +1,3 @@
+@prompt|🤓
+@message|Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬
+---@info|__wooordhunt_noop__
