@@ -27,32 +27,23 @@ nix run github:rokokol/rofi-wooordhunt
 
 ## What you get back
 
-**English in** — the transcriptions in the header, one per part of speech when the spelling covers several words, and the meanings as rows:
-
-```
-🤓  transfer
-    🇺🇸: |trænsˈfɜːr| (глагол), |ˈtrænsfɜːr| (существительное) // 🇬🇧: …
-    передача
-    перевод
-    трансфер
-```
-
 **Russian in** — the English words, each with its own transcription, its gloss list, and the site's explanation of when to pick this one over its synonyms:
 
-```
-🤓  риск
-    🇷🇺: риск （´ω｀♡%）
-    risk |rɪsk| — риск, опасность, вероятность убытков
-       Основное и самое общее слово для обозначения "риска"…
-    jeopardy |ˈdʒepərdɪ| — опасность, риск, угроза
-       Более формальный синоним слова "risk" или "danger"…
-```
+![A Russian query](docs/screenshot-ru.png)
 
 That explanation is what makes the Russian direction worth having: a list of six synonyms says nothing about which one a native speaker would reach for, and this one does. The indented lines are **non-selectable** — arrow keys skip them, so the explanation reads as a note under the word rather than as nine more things to choose from
 
+**English in** — the transcriptions in the header, one per part of speech when the spelling covers several words, and the meanings as rows:
+
+![An English query](docs/screenshot-en.png)
+
 Enter copies the entry. On a word with an explanation it copies the **word**, not the line you were looking at
 
-Multi-word phrases work — `give up`, `эй там`. The space becomes the underscore the site expects
+Multi-word phrases work too. The space becomes the underscore the site expects:
+
+![A phrase](docs/screenshot-phrase.png)
+
+The colours and the rounded rows are **not** from this repo — that is my rofi theme, which lives in [huix](https://github.com/rokokol/huix/tree/master/home-manager/programs/rofi). The modi only emits rows and a mode name; how they look is your rofi's business
 
 ## Install
 
@@ -161,6 +152,7 @@ Byte-identical HTML is deliberately not the bar — only the parsed output decid
 rofi-wooordhunt.sh   the modi: fetch, parse, emit the rofi protocol
 nix/                 package.nix, module.nix, module-test.nix
 tests/               run.sh, live.sh, refresh.sh, the saved pages and the golden output
+docs/                the screenshots
 install.sh           for systems without Nix
 ```
 
