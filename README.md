@@ -141,11 +141,17 @@ Homographs are why that block is walked rather than grepped: `transfer` is two w
 tests/run.sh              # 19 checks, no network
 tests/run.sh --update     # re-record the golden output after a deliberate change
 tests/live.sh             # the same questions, asked of the real site
+tests/refresh.sh [dir]    # re-download the saved pages named in routes
 ```
 
 `tests/run.sh` puts a stub `curl` on PATH that serves saved pages from `tests/fixtures` according to `tests/fixtures/routes`, and diffs the rofi protocol the modi emits against `tests/golden` — so a change in how an answer is assembled shows up as a diff. Two reserved slugs stand in for the failures a saved page cannot express, a timeout and a transport error
 
-Nothing in it touches the network, which is also its limit: **the fixtures keep parsing long after the site has stopped looking like them**. That is what `tests/live.sh` is for — it asks wooordhunt itself the same questions and checks the shape of the answer rather than its wording. A [weekly workflow](.github/workflows/upstream.yml) runs it, so a redesign upstream surfaces as a red run instead of as an empty rofi window
+Nothing in it touches the network, which is also its limit: **the fixtures keep parsing long after the site has stopped looking like them**. So a [weekly workflow](.github/workflows/upstream.yml) does two things the offline suite cannot:
+
+- `tests/live.sh` asks wooordhunt itself the same questions and checks the shape of the answer rather than its wording
+- `tests/refresh.sh fresh` re-downloads every page `routes` names, and the whole offline suite runs **against the fresh copy**. A golden diff there is the site's markup having moved under the saved pages — the failure the offline suite can never produce on its own. The refreshed set is uploaded as a run artifact, so re-recording is a download and a commit
+
+Byte-identical HTML is deliberately not the bar — only the parsed output decides pass or fail, or an ad slot would turn the run red every week. Whether the HTML moved anyway is reported in the run summary
 
 `nix flake check` runs the offline suite plus the packaged wrapper parsing a real page through the real `curl`, every setting reaching the script, and the Home Manager module evaluated against option stubs
 
@@ -154,7 +160,7 @@ Nothing in it touches the network, which is also its limit: **the fixtures keep 
 ```
 rofi-wooordhunt.sh   the modi: fetch, parse, emit the rofi protocol
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh, live.sh, the saved pages and the golden output
+tests/               run.sh, live.sh, refresh.sh, the saved pages and the golden output
 install.sh           for systems without Nix
 ```
 

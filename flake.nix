@@ -177,7 +177,7 @@
                 ];
               }
               ''
-                files="${modi} ${testsDir}/run.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy"
+                files="${modi} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086

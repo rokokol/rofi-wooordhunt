@@ -20,7 +20,9 @@ trap 'rm -rf "$WORK"' EXIT
 
 # tests/stub shadows the real curl and the clipboard, so nothing here leaves the machine
 export PATH="$HERE/stub:$PATH"
-export FIXTURES="$HERE/fixtures"
+# Overridable so the same suite can run against a freshly downloaded set — that is how
+# the weekly workflow notices the site's markup moving under the saved pages
+export FIXTURES="${FIXTURES:-$HERE/fixtures}"
 export COPIED="$WORK/copied"
 export ROFI_WOOORDHUNT_URL="https://wooordhunt.invalid"
 export ROFI_WOOORDHUNT_COPY="fake-copy"

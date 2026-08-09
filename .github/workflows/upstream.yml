@@ -1,8 +1,8 @@
 name: upstream
 
 # The saved pages can be parsed forever after the site has stopped looking like them.
-# This is the only job that goes near the network, on a schedule rather than on a push,
-# so a wooordhunt redesign shows up as a red run instead of as an empty rofi window
+# This is the only workflow that goes near the network, on a schedule rather than on a
+# push, so a wooordhunt redesign shows up as a red run instead of as an empty rofi window
 on:
   schedule:
     - cron: "0 6 * * 1"
@@ -14,4 +14,38 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
-      - run: nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c ./tests/live.sh
+
+      # Asks the live site the same questions and checks the shape of the answer
+      - name: the site still answers the way the parser expects
+        run: nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c ./tests/live.sh
+
+      # …then re-downloads the saved set and runs the whole offline suite against it. A
+      # golden diff here is the site's markup having moved under the fixtures — the one
+      # failure the offline suite can never produce on its own
+      - name: the saved pages still parse like the pages being served
+        run: |
+          nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c bash -c '
+            ./tests/refresh.sh fresh
+            FIXTURES=$PWD/fresh ./tests/run.sh'
+
+      # Byte-identical HTML is not required to pass — only the parsed output is. But
+      # knowing the markup moved while the output held is worth a line in the summary
+      - name: report whether the HTML itself changed
+        if: always()
+        run: |
+          moved=$(for f in tests/fixtures/*.html; do
+            cmp -s "$f" "fresh/$(basename "$f")" || basename "$f"
+          done)
+          if [ -n "$moved" ]; then
+            printf 'HTML changed (the parsed output is what decides pass/fail):\n%s\n' "$moved" \
+              >>"$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Saved pages are byte-identical to what the site serves' >>"$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Refreshing is then a download and a commit, not a hand-run curl per page
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fresh-fixtures
+          path: fresh

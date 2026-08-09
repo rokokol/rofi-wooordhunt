@@ -15,14 +15,14 @@ fails=0
 
 # Arguments: $1 = what the case proves, $2 = ERE the output must contain, rest = query
 expect() {
-  local what="$1" pattern="$2" out
+  local what="$1" pattern="$2" out line
   shift 2
   out=$(ROFI_RETV=1 "$MODI" "$@" | tr '\000\037' '@|')
   if grep -qE "$pattern" <<<"$out"; then
     printf '  ✓ %s\n' "$what"
   else
     printf '  ✗ %s — no line matching /%s/ for "%s"\n' "$what" "$pattern" "$*"
-    sed 's/^/      /' <<<"$out"
+    while IFS= read -r line; do printf '      %s\n' "$line"; done <<<"$out"
     fails=$((fails + 1))
   fi
 }
