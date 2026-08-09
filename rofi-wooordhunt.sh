@@ -71,6 +71,40 @@ print_fallback_entry() {
   printf '%s\0info\x1f%s\n' "---" "$SENTINEL_NOOP"
 }
 
+# Break text into lines of at most $1 characters, at spaces. This is `fold -s -w`, done
+# here because fold only learned to count characters in coreutils 9.8 — anything older
+# counts bytes and wraps Cyrillic at half the asked width. bash counts characters in any
+# UTF-8 locale, which is what the block above makes sure we are in
+wrap_words() {
+  local width="$1" line="" word
+  local -a words
+  read -ra words <<<"${2//$'\n'/ }"
+  for word in "${words[@]}"; do
+    # A word longer than the whole line has nowhere to break but mid-word
+    while ((${#word} > width)); do
+      if [[ -n "$line" ]]; then
+        printf '%s\n' "$line"
+        line=""
+      fi
+      printf '%s\n' "${word:0:width}"
+      word="${word:width}"
+    done
+    if [[ -z "$line" ]]; then
+      line="$word"
+    # +2 is the joining space and the blank fold leaves at the end of a broken line —
+    # matching it keeps the wrapping identical to what fold 9.8+ produces
+    elif ((${#line} + ${#word} + 2 <= width)); then
+      line+=" $word"
+    else
+      printf '%s\n' "$line"
+      line="$word"
+    fi
+  done
+  if [[ -n "$line" ]]; then
+    printf '%s\n' "$line"
+  fi
+}
+
 # Print a long hint under the translation. rofi rows are single-line, so we wrap
 # manually and emit one line per item. The lines are non-selectable (skipped during
 # navigation) and carry the English word as the copy value, so a stray activation
@@ -78,10 +112,9 @@ print_fallback_entry() {
 print_hint_lines() {
   local text="$1" copy_value="$2" line
   while IFS= read -r line; do
-    line="${line%"${line##*[![:space:]]}"}"
     [[ -z "$line" ]] && continue
     printf '   %s\0info\x1f%s\x1fnonselectable\x1ftrue\n' "$line" "$copy_value"
-  done < <(printf '%s\n' "$text" | fold -s -w "$WRAP_WIDTH")
+  done < <(wrap_words "$WRAP_WIDTH" "$text")
 }
 
 if [[ -n "${ROFI_INFO:-}" ]]; then

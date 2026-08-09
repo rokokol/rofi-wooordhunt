@@ -94,7 +94,7 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh для пользов�
 
 Ничего не собирается: скрипт копируется в `$PREFIX/share/rofi-wooordhunt` и линкуется в `$PREFIX/bin`
 
-Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `fold`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`
+Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`
 
 Дальше бинд руками:
 
@@ -138,7 +138,7 @@ API нет. Modi забирает страницу и читает её `pup` и
 ## Тесты
 
 ```sh
-tests/run.sh              # 18 проверок, без сети
+tests/run.sh              # 19 проверок, без сети
 tests/run.sh --update     # перезаписать эталон после осознанного изменения
 tests/live.sh             # те же вопросы, но живому сайту
 ```

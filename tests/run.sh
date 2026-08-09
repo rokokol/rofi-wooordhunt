@@ -89,6 +89,18 @@ else
   printf '      locales available: %s\n' "$(locale -a 2>/dev/null | grep -i utf | tr '\n' ' ')"
 fi
 
+# fold counted bytes until coreutils 9.8, so the wrapping must not reach it at all —
+# a fold that refuses to run has to make no difference
+mkdir -p "$WORK/poison"
+printf '#!/bin/sh\nexit 1\n' >"$WORK/poison/fold"
+chmod +x "$WORK/poison/fold"
+if diff -q "$GOLDEN/ru-sections.txt" \
+  <(PATH="$WORK/poison:$PATH" ROFI_RETV=1 "$MODI" риск | readable) >/dev/null; then
+  echo "  ✓ the wrapping does not go through fold"
+else
+  fail "fold: the wrapping still depends on it, and on its version"
+fi
+
 # …and a locale name this machine does not have must not take the layout with it
 if diff -q "$GOLDEN/ru-sections.txt" \
   <(ROFI_WOOORDHUNT_LOCALE=zz_ZZ.bogus ROFI_RETV=1 "$MODI" риск | readable) >/dev/null; then

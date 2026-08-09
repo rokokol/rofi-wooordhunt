@@ -94,7 +94,7 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 
 Nothing is built: the script is copied to `$PREFIX/share/rofi-wooordhunt` and symlinked into `$PREFIX/bin`
 
-Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `fold`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
+Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
 
 Then bind it yourself:
 
@@ -138,7 +138,7 @@ Homographs are why that block is walked rather than grepped: `transfer` is two w
 ## Tests
 
 ```sh
-tests/run.sh              # 18 checks, no network
+tests/run.sh              # 19 checks, no network
 tests/run.sh --update     # re-record the golden output after a deliberate change
 tests/live.sh             # the same questions, asked of the real site
 ```
