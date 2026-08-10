@@ -14,9 +14,13 @@
       forAllSystems = f: lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
 
       # Each piece isolated, so a README edit doesn't rebuild anything
-      modi = builtins.path {
+      launcher = builtins.path {
         name = "rofi-wooordhunt.sh";
         path = ./rofi-wooordhunt.sh;
+      };
+      modi = builtins.path {
+        name = "wooordhunt-modi.sh";
+        path = ./wooordhunt-modi.sh;
       };
       testsDir = builtins.path {
         name = "rofi-wooordhunt-tests";
@@ -57,7 +61,8 @@
               ''
                 export HOME=$PWD
                 mkdir -p repo
-                cp ${modi} repo/rofi-wooordhunt.sh
+                cp ${launcher} repo/rofi-wooordhunt.sh
+                cp ${modi} repo/wooordhunt-modi.sh
                 cp -r ${testsDir} repo/tests
                 chmod -R +w repo
                 patchShebangs repo
@@ -84,17 +89,29 @@
                     pkgs.gnugrep
                   ]
                 }
+                modi=${rofi-wooordhunt}/libexec/wooordhunt-modi
                 mkdir -p pages/word
                 ln -s ${testsDir}/fixtures/house.html pages/word/house
                 export ROFI_WOOORDHUNT_URL="file://$PWD/pages"
 
                 # No grep -q on a pipe: it closes the pipe early and the writer sees EPIPE
-                ROFI_RETV=1 rofi-wooordhunt house | tr '\000\037' '@|' >out
+                ROFI_RETV=1 $modi house | tr '\000\037' '@|' >out
                 grep -xF 'дом@info|дом' out >/dev/null
                 grep -F '@message|🇺🇸: |haʊs|' out >/dev/null
                 # The mode must name itself, without anything in rofi.rasi
-                ROFI_RETV=0 rofi-wooordhunt | tr '\000\037' '@|' | grep -xF '@prompt|🤓' >/dev/null
+                ROFI_RETV=0 $modi | tr '\000\037' '@|' | grep -xF '@prompt|🤓' >/dev/null
                 rofi-wooordhunt --help | grep ROFI_WOOORDHUNT_COPY >/dev/null
+
+                # The launcher has to hand rofi the modi of its own derivation, and pass
+                # a query on as the initial filter — a stub rofi just prints its arguments
+                mkdir -p stub
+                printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' >stub/rofi
+                chmod +x stub/rofi
+                PATH=$PWD/stub:$PATH rofi-wooordhunt "два слова" >launched
+                grep -xF "dictionary:$modi" launched >/dev/null ||
+                  { echo "the launcher does not point rofi at its own modi"; exit 1; }
+                grep -xF 'два слова' launched >/dev/null ||
+                  { echo "the query did not reach rofi as one filter"; exit 1; }
                 touch $out
               '';
 
@@ -117,26 +134,27 @@
                   pkgs.gnugrep
                 ]
               }
-              ROFI_RETV=0 rofi-wooordhunt | tr '\000\037' '@|' | grep -xF '@prompt|📖' >/dev/null ||
+              modi=${tuned}/libexec/wooordhunt-modi
+              ROFI_RETV=0 $modi | tr '\000\037' '@|' | grep -xF '@prompt|📖' >/dev/null ||
                 { echo "the mode does not carry the configured prompt"; exit 1; }
               # copyCommand = cat, so picking an entry lands on stdout
-              ROFI_RETV=1 ROFI_INFO=дом rofi-wooordhunt | grep -xF 'дом' >/dev/null ||
+              ROFI_RETV=1 ROFI_INFO=дом $modi | grep -xF 'дом' >/dev/null ||
                 { echo "the configured clipboard command was not used"; exit 1; }
               # The rest only shows against a live page, so here it is enough that the
               # wrapper passes it on — tests/run.sh drives the behaviour behind them
               for pair in "WRAP_WIDTH-'33'" "HEAD_WIDTH-'44'" "TIMEOUT-'9'"; do
-                grep -F "ROFI_WOOORDHUNT_''${pair}}" ${tuned}/bin/rofi-wooordhunt >/dev/null ||
+                grep -F "ROFI_WOOORDHUNT_''${pair}}" $modi >/dev/null ||
                   { echo "the wrapper drops ROFI_WOOORDHUNT_''${pair%%-*}"; exit 1; }
               done
               # …and an unset setting leaves the script's own default as the single source of it
-              if grep -q ROFI_WOOORDHUNT ${rofi-wooordhunt}/bin/rofi-wooordhunt; then
+              if grep -q ROFI_WOOORDHUNT_PROMPT ${rofi-wooordhunt}/libexec/wooordhunt-modi; then
                 echo "an unset setting still got baked in"
                 exit 1
               fi
               touch $out
             '';
 
-          # Enabling the module has to be enough to get the key and the package
+          # Enabling the module has to be enough to get the package, settings and all
           module-wiring =
             let
               wiring = import ./nix/module-test.nix {
@@ -153,18 +171,10 @@
               ''
                 want() { jq -e "$1" "$dumpPath" >/dev/null || { echo "module wiring: $2"; exit 1; }; }
 
-                want '.hyprland.bind | any(test("SUPER, Y, exec, rofi -show dictionary"))' "the dictionary is not bound"
-                want '.hyprland.bind | any(test("dictionary:.*bin/rofi-wooordhunt"))' "the bind names no modi"
                 want '.package | test("rofi-wooordhunt")' "no package installed"
-
-                # Renaming the mode has to move every mention of it at once
-                want '.renamedCommand | test("-show словарь -modi \"словарь:")' "the mode name did not follow"
-                want '.renamedHyprland.bind | any(test("SUPER, D, exec"))' "the key did not follow"
-
-                # …and none of it leaks into a config that did not ask for it
-                want '.bareHyprland == {}' "binds appear without Hyprland"
+                # A setting rides in the package, so changing it has to move the store path
+                want '.package != .tunedPackage' "the prompt does not reach the package"
                 want '.offPackages == []' "the package is installed while disabled"
-                want '.offHyprland == {}' "binds survive enable = false"
                 touch $out
               '';
 
@@ -177,7 +187,7 @@
                 ];
               }
               ''
-                files="${modi} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy"
+                files="${launcher} ${modi} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086

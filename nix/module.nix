@@ -1,5 +1,6 @@
-# Home Manager module. Enabling it is meant to be enough: the key is bound and the
-# modi names itself, so nothing has to be declared in the rofi config
+# Home Manager module. It installs the package and nothing else: the mode names itself
+# through the script protocol, so nothing has to be declared in the rofi config, and the
+# key is yours to bind — `rofi-wooordhunt` is the whole command
 { self }:
 {
   config,
@@ -10,8 +11,6 @@
 
 let
   cfg = config.programs.rofi-wooordhunt;
-  exe = lib.getExe cfg.package;
-  mod = cfg.hyprland.modifier;
 in
 {
   options.programs.rofi-wooordhunt = {
@@ -73,65 +72,7 @@ in
       example = 5;
       description = "Per-request timeout in seconds handed to curl";
     };
-
-    modeName = lib.mkOption {
-      type = lib.types.str;
-      default = "dictionary";
-      description = "Name the mode is registered and shown under in `rofi -show`";
-    };
-
-    command = lib.mkOption {
-      type = lib.types.str;
-      readOnly = true;
-      default = ''rofi -show ${cfg.modeName} -modi "${cfg.modeName}:${exe}"'';
-      description = "The rofi invocation, for binding it somewhere this module does not reach";
-    };
-
-    hyprland = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = config.wayland.windowManager.hyprland.enable;
-        defaultText = lib.literalExpression "config.wayland.windowManager.hyprland.enable";
-        description = "Bind the key that opens the dictionary";
-      };
-
-      modifier = lib.mkOption {
-        type = lib.types.str;
-        default = "SUPER";
-        description = ''
-          Modifier for the default binding, spelled out rather than taken from a
-          hyprland variable — this line is emitted before your own config is sourced,
-          so a `$mainMod` defined there does not exist yet
-        '';
-      };
-
-      key = lib.mkOption {
-        type = lib.types.str;
-        default = "Y";
-        description = "Key that opens the dictionary, together with `modifier`";
-      };
-
-      settings = lib.mkOption {
-        type = lib.types.attrsOf lib.types.anything;
-        default = {
-          bind = [ "${mod}, ${cfg.hyprland.key}, exec, ${cfg.command}" ];
-        };
-        defaultText = lib.literalExpression "the binding listed in the README";
-        description = ''
-          Merged into `wayland.windowManager.hyprland.settings`. Set to `{ }` to bind
-          it yourself
-        '';
-      };
-    };
   };
 
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-      { home.packages = [ cfg.package ]; }
-
-      (lib.mkIf cfg.hyprland.enable {
-        wayland.windowManager.hyprland.settings = cfg.hyprland.settings;
-      })
-    ]
-  );
+  config = lib.mkIf cfg.enable { home.packages = [ cfg.package ]; };
 }

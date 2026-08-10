@@ -60,20 +60,18 @@ The colours and the rounded rows are **not** from this repo — that is my rofi 
 }
 ```
 
-That is the whole setup: the package is installed, `SUPER + Y` opens the dictionary, and the mode names itself through the script protocol — **nothing goes into your rofi config**, no `display-dictionary` line to keep in sync
+That installs the package and stops there. The mode names itself through the script protocol, so **nothing goes into your rofi config** — no `display-dictionary` line to keep in sync — and the key stays yours, because a binding is a taste and belongs in your own config rather than in someone else's module:
+
+```conf
+bind = SUPER, Y, exec, rofi-wooordhunt
+```
 
 | option | | default |
 | --- | --- | --- |
 | `prompt` | what rofi shows as the mode name | `🤓` |
-| `modeName` | what the mode is called in `rofi -show` | `dictionary` |
 | `copyCommand` | fed the picked entry on stdin | `wl-copy` |
 | `wrapWidth` / `headWidth` | where the lines wrap; widen both for a wider window | `54` / `58` |
 | `timeout` | seconds a request may take | `5` |
-| `hyprland.modifier` / `hyprland.key` | the binding | `SUPER` / `Y` |
-
-Spell the modifier out rather than using `$mainMod` — these lines are emitted before your own config is sourced, so a variable defined there does not exist yet. Set `hyprland.settings` to `{ }` to bind it yourself: `programs.rofi-wooordhunt.command` is the invocation, read-only, so a bind written by hand still follows `modeName`
-
-Not on Hyprland? `hyprland.enable = false`, and bind `command` wherever your compositor keeps its keys
 
 ### Any other distribution
 
@@ -83,15 +81,21 @@ cd rofi-wooordhunt
 sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 ```
 
-Nothing is built: the script is copied to `$PREFIX/share/rofi-wooordhunt` and symlinked into `$PREFIX/bin`
+Nothing is built: both scripts are copied to `$PREFIX/share/rofi-wooordhunt`, and only the launcher is symlinked into `$PREFIX/bin`
 
 Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
 
-Then bind it yourself:
+Then bind it, same line as above:
 
 ```conf
-bind = SUPER, Y, exec, rofi -show dictionary -modi "dictionary:rofi-wooordhunt"
+bind = SUPER, Y, exec, rofi-wooordhunt
 ```
+
+### Two files, one on PATH
+
+`rofi-wooordhunt` is a **launcher**: it starts rofi and hands it the parser as a script modi, by absolute path. The parser — `wooordhunt-modi` — sits in `libexec` and never appears on PATH, because rofi runs it for every keystroke and nobody types it by hand. That is the whole reason the bind is one word instead of a `rofi -show … -modi "…"` incantation copied into every config that wants the dictionary.
+
+A query given on the command line becomes rofi's initial filter, so `rofi-wooordhunt транзистор` opens with the answer already on screen.
 
 ## Settings
 
@@ -109,7 +113,7 @@ Every Home Manager option above is an environment variable underneath, so the sa
 
 The wrapping is ours because **rofi rows are single-line**: text that does not fit is truncated with `…`, never wrapped, so a long explanation has to be broken into rows by hand. That makes both widths a function of your window width — the defaults are for 720px
 
-`rofi-wooordhunt --help` prints the same list. Inside rofi it does not: `ROFI_RETV` is always set there, so `--help` typed into the field is a query like anything else
+`rofi-wooordhunt --help` prints the same list. Typed into the search field it is just a query — the parser has no options of its own, every argument it gets is a word to look up
 
 ## How it works
 
@@ -149,7 +153,8 @@ Byte-identical HTML is deliberately not the bar — only the parsed output decid
 ## Layout
 
 ```
-rofi-wooordhunt.sh   the modi: fetch, parse, emit the rofi protocol
+rofi-wooordhunt.sh   the launcher: the only thing on PATH, starts rofi with the modi
+wooordhunt-modi.sh   the modi: fetch, parse, emit the rofi protocol
 nix/                 package.nix, module.nix, module-test.nix
 tests/               run.sh, live.sh, refresh.sh, the saved pages and the golden output
 docs/                the screenshots

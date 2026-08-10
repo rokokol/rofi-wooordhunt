@@ -9,7 +9,7 @@
 set -euo pipefail
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-MODI="${ROFI_WOOORDHUNT:-$(dirname "$HERE")/rofi-wooordhunt.sh}"
+MODI="${ROFI_WOOORDHUNT_MODI:-$(dirname "$HERE")/wooordhunt-modi.sh}"
 
 fails=0
 

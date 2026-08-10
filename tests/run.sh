@@ -10,7 +10,8 @@ set -euo pipefail
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(dirname "$HERE")
-MODI="${ROFI_WOOORDHUNT:-$REPO/rofi-wooordhunt.sh}"
+MODI="${ROFI_WOOORDHUNT_MODI:-$REPO/wooordhunt-modi.sh}"
+LAUNCHER="${ROFI_WOOORDHUNT:-$REPO/rofi-wooordhunt.sh}"
 GOLDEN="$HERE/golden"
 UPDATE=0
 [[ "${1:-}" == "--update" ]] && UPDATE=1
@@ -147,18 +148,49 @@ else
   fail "wrap width: $narrow hint lines at 20 columns vs $wide at 200"
 fi
 
+# The modi has no options of its own — every argument it gets is a query, "--help" included
+if ROFI_RETV=1 "$MODI" --help | readable | grep -q '@message'; then
+  echo "  ✓ --help is a query for the modi"
+else
+  fail "--help: usage leaked into the mode"
+fi
+
+echo "launcher"
+
+# A stub rofi that prints its arguments: what the launcher builds is the whole contract
+mkdir -p "$WORK/bin"
+cat >"$WORK/bin/rofi" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$@"
+EOF
+chmod +x "$WORK/bin/rofi"
+
+launched=$(PATH="$WORK/bin:$PATH" ROFI_WOOORDHUNT_MODI="$MODI" "$LAUNCHER" "два слова")
+if grep -qxF "dictionary:$MODI" <<<"$launched"; then
+  echo "  ✓ rofi is pointed at the modi"
+else
+  fail "launcher: rofi got no modi of ours"
+fi
+
+# One filter, not two arguments — a query with a space has to survive the trip
+if grep -qxF "два слова" <<<"$launched" && grep -qxF -- "-filter" <<<"$launched"; then
+  echo "  ✓ a query becomes the initial filter"
+else
+  fail "launcher: the query did not reach rofi as one filter"
+fi
+
+# …and without a query there is no filter at all, or rofi opens on an empty search
+if ! PATH="$WORK/bin:$PATH" ROFI_WOOORDHUNT_MODI="$MODI" "$LAUNCHER" | grep -qxF -- "-filter"; then
+  echo "  ✓ no query, no filter"
+else
+  fail "launcher: an empty filter was passed anyway"
+fi
+
 echo "usage"
-if "$MODI" --help | grep -q ROFI_WOOORDHUNT_PROMPT; then
+if "$LAUNCHER" --help | grep -q ROFI_WOOORDHUNT_PROMPT; then
   echo "  ✓ --help lists the settings"
 else
   fail "--help: the settings are undocumented"
-fi
-
-# …but only outside rofi, where "--help" can only be a query
-if ROFI_RETV=1 "$MODI" --help | readable | grep -q '@message'; then
-  echo "  ✓ --help inside rofi is a query"
-else
-  fail "--help inside rofi: usage leaked into the mode"
 fi
 
 if ((fails)); then

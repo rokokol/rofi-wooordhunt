@@ -11,21 +11,9 @@ let
   stubs =
     { lib, ... }:
     {
-      options = {
-        home.packages = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = [ ];
-        };
-        wayland.windowManager.hyprland = {
-          enable = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-          };
-          settings = lib.mkOption {
-            type = lib.types.attrsOf lib.types.anything;
-            default = { };
-          };
-        };
+      options.home.packages = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = [ ];
       };
     };
 
@@ -40,38 +28,28 @@ let
       specialArgs = { inherit pkgs; };
     }).config;
 
-  wiredUp = eval {
-    wayland.windowManager.hyprland.enable = true;
+  on = eval {
     programs.rofi-wooordhunt = {
       enable = true;
       prompt = "🤓";
     };
   };
 
-  renamed = eval {
-    wayland.windowManager.hyprland.enable = true;
-    programs.rofi-wooordhunt = {
-      enable = true;
-      modeName = "словарь";
-      hyprland.key = "D";
-    };
-  };
-
-  bare = eval { programs.rofi-wooordhunt.enable = true; };
-
   off = eval { programs.rofi-wooordhunt.enable = false; };
 in
 {
-  hyprland = wiredUp.wayland.windowManager.hyprland.settings;
   # Joined rather than indexed, so "installed nothing" fails the assertion instead of
   # blowing up during evaluation with an unhelpful list error
-  package = lib.concatMapStringsSep " " toString wiredUp.home.packages;
-
-  renamedHyprland = renamed.wayland.windowManager.hyprland.settings;
-  renamedCommand = renamed.programs.rofi-wooordhunt.command;
-
-  bareHyprland = bare.wayland.windowManager.hyprland.settings;
+  package = lib.concatMapStringsSep " " toString on.home.packages;
+  # The prompt travels with the package, so a settings change has to move the store path
+  tunedPackage =
+    lib.concatMapStringsSep " " toString
+      (eval {
+        programs.rofi-wooordhunt = {
+          enable = true;
+          prompt = "📖";
+        };
+      }).home.packages;
 
   offPackages = off.home.packages;
-  offHyprland = off.wayland.windowManager.hyprland.settings;
 }

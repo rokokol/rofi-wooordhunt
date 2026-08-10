@@ -6,12 +6,13 @@ PREFIX="${PREFIX:-/usr/local}"
 
 usage() {
   cat <<EOF
-install.sh — install the rofi-wooordhunt modi
+install.sh — install rofi-wooordhunt
 
   PREFIX=$PREFIX (override with PREFIX=... or --prefix DIR)
 
-The script goes to \$PREFIX/share/rofi-wooordhunt, and \$PREFIX/bin gets a symlink to
-it. Everything it needs — curl, pup, jq, a clipboard tool — comes from your PATH
+Both scripts go to \$PREFIX/share/rofi-wooordhunt, and \$PREFIX/bin gets a symlink to
+the launcher only — the modi is rofi's to run, not yours. Everything they need — curl,
+pup, jq, a clipboard tool — comes from your PATH
 EOF
 }
 
@@ -36,6 +37,7 @@ here="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 share="$PREFIX/share/rofi-wooordhunt"
 
 install -Dm755 "$here/rofi-wooordhunt.sh" "$share/rofi-wooordhunt.sh"
+install -Dm755 "$here/wooordhunt-modi.sh" "$share/wooordhunt-modi.sh"
 
 install -d "$PREFIX/bin"
 ln -sfn ../share/rofi-wooordhunt/rofi-wooordhunt.sh "$PREFIX/bin/rofi-wooordhunt"
