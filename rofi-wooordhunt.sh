@@ -14,6 +14,13 @@ usage() {
 rofi-wooordhunt — a rofi dictionary translating both ways through wooordhunt.ru
 
   rofi-wooordhunt [word]   open the dictionary; a word given here fills the search line
+  rofi -modi "x:rofi-wooordhunt"
+                           it works as a mode of your own rofi too, next to whatever
+                           else you keep there — run that way it steps aside and lets
+                           the parser answer
+  rofi-wooordhunt --modi   print where that parser lives. Not needed for the line
+                           above; it is for pointing rofi straight at it, or for
+                           looking at what actually runs
 
 Type in either direction; Enter copies the highlighted entry. Environment:
 
@@ -28,9 +35,23 @@ Type in either direction; Enter copies the highlighted entry. Environment:
 EOF
 }
 
+# Somebody pointed rofi at this launcher. Opening a rofi from inside rofi is refused by
+# rofi itself, and being told so helps nobody — so step aside and let the modi answer, the
+# way rofi expected in the first place. ROFI_RETV is set by rofi and nothing else
+if [[ -n "${ROFI_RETV:-}" ]]; then
+  exec "$MODI" "$@"
+fi
+
 case "${1:-}" in
   -h | --help)
     usage
+    exit 0
+    ;;
+  # The parser is off PATH, so this is the only way to name it from outside. Under Nix
+  # it is the wrapper that gets named, not the script it wraps — the bare script would
+  # find neither curl nor pup
+  --modi)
+    printf '%s\n' "$MODI"
     exit 0
     ;;
 esac

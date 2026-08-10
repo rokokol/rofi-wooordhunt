@@ -186,6 +186,23 @@ else
   fail "launcher: an empty filter was passed anyway"
 fi
 
+# rofi refuses to run inside rofi, so composing the dictionary into a rofi of your own
+# means naming the modi — and it is off PATH
+if [[ "$(ROFI_WOOORDHUNT_MODI="$MODI" "$LAUNCHER" --modi)" == "$MODI" ]]; then
+  echo "  ✓ --modi names where the parser lives"
+else
+  fail "--modi: the modi cannot be named from outside"
+fi
+
+# …and pointed at as a modi it answers as one, instead of asking rofi to nest and being
+# refused. The stub rofi is on PATH here: reaching it at all would be the failure
+if PATH="$WORK/bin:$PATH" ROFI_RETV=0 ROFI_WOOORDHUNT_MODI="$MODI" "$LAUNCHER" |
+  readable | grep -qxF '@prompt|🤓'; then
+  echo "  ✓ pointed at as a modi, the launcher steps aside and the modi answers"
+else
+  fail "as a modi: the launcher still tried to open a rofi of its own"
+fi
+
 echo "usage"
 if "$LAUNCHER" --help | grep -q ROFI_WOOORDHUNT_PROMPT; then
   echo "  ✓ --help lists the settings"

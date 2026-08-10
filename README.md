@@ -95,7 +95,17 @@ bind = SUPER, Y, exec, rofi-wooordhunt
 
 `rofi-wooordhunt` is a **launcher**: it starts rofi and hands it the parser as a script modi, by absolute path. The parser — `wooordhunt-modi` — sits in `libexec` and never appears on PATH, because rofi runs it for every keystroke and nobody types it by hand. That is the whole reason the bind is one word instead of a `rofi -show … -modi "…"` incantation copied into every config that wants the dictionary.
 
-A query given on the command line becomes rofi's initial filter, so `rofi-wooordhunt транзистор` opens with the answer already on screen.
+A query given on the command line becomes rofi's initial filter, so `rofi-wooordhunt транзистор` opens with the search line already filled.
+
+It is also a **mode of your own rofi**, next to whatever else you keep there — point rofi at the launcher and it steps aside for the parser:
+
+```sh
+rofi -show dictionary -modi "dictionary:rofi-wooordhunt,emoji:rofimoji"
+```
+
+That detour exists because rofi refuses to run inside rofi (it keeps the outer pid in `ROFI_OUTSIDE` and checks it is still alive), so a launcher that finds `ROFI_RETV` in its environment knows it was mistaken for a mode, and hands the job to the parser rather than to a rofi that would never start.
+
+`rofi-wooordhunt --modi` prints where that parser is, which the line above does not need — it is for pointing rofi straight at it, or for looking at what actually runs. Under Nix that path is the `makeWrapper` wrapper, not the script it wraps: the bare script would find neither `curl` nor `pup`.
 
 ## Settings
 
