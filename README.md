@@ -2,7 +2,7 @@
 
 # rofi-wooordhunt
 
-**Wooordhunt rofi parser** 🤓
+**Парсер Wooordhunt в rofi** 🤓
 
 ![rofi](https://img.shields.io/badge/rofi-script--modi-F4A100?style=flat)
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
@@ -10,55 +10,53 @@
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml)
 
-[Русский](README.ru.md)
+[English](README.en.md)
 
 </div>
 
-Type a word, get the translation, press Enter, it is on your clipboard. **Both directions in one field** — [wooordhunt.ru](https://wooordhunt.ru) decides which one you meant, so there is no mode to switch and no prefix to remember
+Парсер для [wooordhunt.ru](https://wooordhunt.ru). Сам понимает направление перевода
 
-Reaching for a browser tab costs a window, a page load and a way back. This costs one key
-
-Came over from my rice, **[rokokol/huix](https://github.com/rokokol/huix)**
+Приехало из моего райса, **[rokokol/huix](https://github.com/rokokol/huix)**
 
 ```sh
-# try it on the running session without installing anything
+# попробовать на живой сессии, ничего не устанавливая
 nix run github:rokokol/rofi-wooordhunt
 ```
 
-## Contents
+## Содержание
 
-- [What you get back](#what-you-get-back)
-- [Install](#install)
+- [Что приходит в ответ](#что-приходит-в-ответ)
+- [Установка](#установка)
   - [Home Manager](#home-manager)
-  - [Any other distribution](#any-other-distribution)
-  - [Two files, one on PATH](#two-files-one-on-path)
-- [Settings](#settings)
-- [How it works](#how-it-works)
-- [Tests](#tests)
-- [Layout](#layout)
-- [License](#license)
+  - [Любой другой дистрибутив](#любой-другой-дистрибутив)
+  - [Два файла, на PATH один](#два-файла-на-path-один)
+- [Настройки](#настройки)
+- [Как это устроено](#как-это-устроено)
+- [Тесты](#тесты)
+- [Структура](#структура)
+- [Лицензия](#лицензия)
 
-## What you get back
+## Что приходит в ответ
 
-**Russian in** — the English words, each with its own transcription, its gloss list, and the site's explanation of when to pick this one over its synonyms:
+**Русский на входе** — английские слова, у каждого своя транскрипция, свой список значений и объяснение сайта, когда брать именно это слово, а не соседнее:
 
-![A Russian query](docs/screenshot-ru.png)
+![Русский запрос](docs/screenshot-ru.png)
 
-That explanation is what makes the Russian direction worth having: a list of six synonyms says nothing about which one a native speaker would reach for, and this one does. The indented lines are **non-selectable** — arrow keys skip them, so the explanation reads as a note under the word rather than as nine more things to choose from
+Ради этого объяснения русское направление и нужно: список из шести синонимов не говорит ничего о том, какой из них выберет носитель, а объяснение говорит. Отступленные строки **невыбираемые** — стрелки их пропускают, так что объяснение читается как примечание под словом, а не как ещё девять вариантов выбора
 
-**English in** — the transcriptions in the header, one per part of speech when the spelling covers several words, and the meanings as rows:
+**Английский на входе** — транскрипции в шапке, по одной на часть речи, если написание покрывает несколько слов, и значения строками:
 
-![An English query](docs/screenshot-en.png)
+![Английский запрос](docs/screenshot-en.png)
 
-Enter copies the entry. On a word with an explanation it copies the **word**, not the line you were looking at
+Enter копирует запись. У слова с объяснением копируется **слово**, а не та строка, на которой стоял курсор
 
-Multi-word phrases work too. The space becomes the underscore the site expects:
+Фразы из нескольких слов тоже работают. Пробел превращается в подчёркивание, которого ждёт сайт:
 
-![A phrase](docs/screenshot-phrase.png)
+![Фраза](docs/screenshot-phrase.png)
 
-The colours and the rounded rows are **not** from this repo — that is my rofi theme, which lives in [huix](https://github.com/rokokol/huix/tree/master/home-manager/programs/rofi). The modi only emits rows and a mode name; how they look is your rofi's business
+_Тема — [ddlc-rofi-theme](https://github.com/rokokol/ddlc-rofi-theme)_
 
-## Install
+## Установка
 
 ### Home Manager
 
@@ -66,124 +64,120 @@ The colours and the rounded rows are **not** from this repo — that is my rofi 
 {
   inputs.rofi-wooordhunt.url = "github:rokokol/rofi-wooordhunt";
 
-  # in your home configuration
+  # в home-конфигурации
   imports = [ inputs.rofi-wooordhunt.homeManagerModules.default ];
 
   programs.rofi-wooordhunt.enable = true;
 }
 ```
 
-That installs the package and stops there. The mode names itself through the script protocol, so **nothing goes into your rofi config** — no `display-dictionary` line to keep in sync — and the key stays yours, because a binding is a taste and belongs in your own config rather than in someone else's module:
+Модуль ставит пакет и на этом заканчивается. Режим называет себя сам через протокол script-modi
 
-```conf
-bind = SUPER, Y, exec, rofi-wooordhunt
-```
+| опция                     |                                                         | по умолчанию |
+| ------------------------- | ------------------------------------------------------- | ------------ |
+| `prompt`                  | как rofi подписывает режим                              | `🤓`         |
+| `copyCommand`             | чем копировать выбранную запись                         | `wl-copy`    |
+| `wrapWidth` / `headWidth` | где переносятся строки; для широкого окна расширять обе | `54` / `58`  |
+| `timeout`                 | сколько секунд отводится запросу                        | `5`          |
 
-| option | | default |
-| --- | --- | --- |
-| `prompt` | what rofi shows as the mode name | `🤓` |
-| `copyCommand` | fed the picked entry on stdin | `wl-copy` |
-| `wrapWidth` / `headWidth` | where the lines wrap; widen both for a wider window | `54` / `58` |
-| `timeout` | seconds a request may take | `5` |
-
-### Any other distribution
+### Любой другой дистрибутив
 
 ```sh
 git clone https://github.com/rokokol/rofi-wooordhunt
 cd rofi-wooordhunt
-sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
+sudo ./install.sh          # PREFIX=~/.local ./install.sh для пользовательской установки
 ```
 
-Nothing is built: both scripts are copied to `$PREFIX/share/rofi-wooordhunt`, and only the launcher is symlinked into `$PREFIX/bin`
+Ничего не собирается: оба скрипта копируются в `$PREFIX/share/rofi-wooordhunt`, а в `$PREFIX/bin` линкуется только лаунчер
 
-Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
+Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`
 
-Then bind it, same line as above:
+Дальше бинд руками:
 
 ```conf
 bind = SUPER, Y, exec, rofi-wooordhunt
 ```
 
-### Two files, one on PATH
+### Два файла, на PATH один
 
-`rofi-wooordhunt` is a **launcher**: it starts rofi and hands it the parser as a script modi, by absolute path. The parser — `wooordhunt-modi` — sits in `libexec` and never appears on PATH, because rofi runs it for every keystroke and nobody types it by hand. That is the whole reason the bind is one word instead of a `rofi -show … -modi "…"` incantation copied into every config that wants the dictionary.
+`rofi-wooordhunt` — это **лаунчер**: он запускает rofi и отдаёт ему парсер как script-modi, абсолютным путём. Парсер — `wooordhunt-modi` — лежит в `libexec` и на PATH не появляется: rofi дёргает его на каждое нажатие, а руками его не запускают. Ради этого всё и затевалось — бинд стал одним словом вместо заклинания `rofi -show … -modi "…"`, которое иначе приходится копировать в каждый конфиг.
 
-A query given on the command line becomes rofi's initial filter, so `rofi-wooordhunt транзистор` opens with the search line already filled.
+Запрос из командной строки становится начальным фильтром rofi, так что `rofi-wooordhunt транзистор` открывается с уже заполненной строкой поиска.
 
-It is also a **mode of your own rofi**, next to whatever else you keep there — point rofi at the launcher and it steps aside for the parser:
+Он же — **режим твоего собственного rofi**, рядом с чем угодно ещё: наводишь rofi на лаунчер, и тот уступает место парсеру:
 
 ```sh
 rofi -show dictionary -modi "dictionary:rofi-wooordhunt,emoji:rofimoji"
 ```
 
-That detour exists because rofi refuses to run inside rofi (it keeps the outer pid in `ROFI_OUTSIDE` and checks it is still alive), so a launcher that finds `ROFI_RETV` in its environment knows it was mistaken for a mode, and hands the job to the parser rather than to a rofi that would never start.
+Уступка нужна потому, что rofi отказывается запускаться внутри rofi (он держит pid внешнего экземпляра в `ROFI_OUTSIDE` и проверяет, жив ли тот). Лаунчер, увидевший в окружении `ROFI_RETV`, понимает, что его приняли за режим, и отдаёт работу парсеру, а не rofi, который всё равно не стартует.
 
-`rofi-wooordhunt --modi` prints where that parser is, which the line above does not need — it is for pointing rofi straight at it, or for looking at what actually runs. Under Nix that path is the `makeWrapper` wrapper, not the script it wraps: the bare script would find neither `curl` nor `pup`.
+`rofi-wooordhunt --modi` печатает, где этот парсер лежит, — строке выше это не нужно, флаг нужен, чтобы навести rofi прямо на него или посмотреть, что вообще запускается. Под Nix там окажется обёртка `makeWrapper`, а не завёрнутый скрипт: голый скрипт не найдёт ни `curl`, ни `pup`.
 
-## Settings
+## Настройки
 
-Every Home Manager option above is an environment variable underneath, so the same knobs work without Nix:
+Под каждой опцией Home Manager лежит переменная окружения, так что те же ручки работают и без Nix:
 
-| | |
-| --- | --- |
-| `ROFI_WOOORDHUNT_PROMPT` | the mode name rofi shows |
-| `ROFI_WOOORDHUNT_COPY` | the clipboard command |
-| `ROFI_WOOORDHUNT_WRAP_WIDTH` | width the indented explanation wraps at |
-| `ROFI_WOOORDHUNT_HEAD_WIDTH` | width the word line may reach before its gloss drops below |
-| `ROFI_WOOORDHUNT_TIMEOUT` | per-request timeout in seconds |
-| `ROFI_WOOORDHUNT_URL` | the site root, for pointing the modi at a mirror or a fixture tree |
-| `ROFI_WOOORDHUNT_LOCALE` | the locale the wrapping counts characters in; unset, the modi takes the first UTF-8 locale the machine actually answers to |
+|                              |                                                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ROFI_WOOORDHUNT_PROMPT`     | подпись режима в rofi                                                                                                   |
+| `ROFI_WOOORDHUNT_COPY`       | команда копирования                                                                                                     |
+| `ROFI_WOOORDHUNT_WRAP_WIDTH` | ширина переноса отступленного объяснения                                                                                |
+| `ROFI_WOOORDHUNT_HEAD_WIDTH` | докуда может дорасти строка слова, прежде чем значения уедут вниз                                                       |
+| `ROFI_WOOORDHUNT_TIMEOUT`    | таймаут одного запроса в секундах                                                                                       |
+| `ROFI_WOOORDHUNT_URL`        | корень сайта — навести modi на зеркало или на дерево фикстур                                                            |
+| `ROFI_WOOORDHUNT_LOCALE`     | локаль, в которой перенос считает символы; без неё modi берёт первую UTF-8-локаль, на которую машина реально отзывается |
 
-The wrapping is ours because **rofi rows are single-line**: text that does not fit is truncated with `…`, never wrapped, so a long explanation has to be broken into rows by hand. That makes both widths a function of your window width — the defaults are for 720px
+Перенос свой, потому что **строка rofi однострочная**: то, что не влезло, обрезается многоточием, а не переносится, поэтому длинное объяснение приходится ломать на строки руками. Отсюда обе ширины — функция ширины окна; значения по умолчанию рассчитаны на 720px
 
-`rofi-wooordhunt --help` prints the same list. Typed into the search field it is just a query — the parser has no options of its own, every argument it gets is a word to look up
+`rofi-wooordhunt --help` печатает тот же список. Набранный в поле поиска `--help` — просто запрос: у парсера своих опций нет, любой аргумент для него слово к переводу
 
-## How it works
+## Как это устроено
 
-There is no API. The modi fetches the page and reads it with `pup` and `jq`, which is enough because the markup is regular — but the site has **four different shapes** for what is nominally the same answer, and the parser walks them in order:
+API нет. Modi забирает страницу и читает её `pup` и `jq` — этого хватает, потому что вёрстка регулярная, — но у сайта **четыре разных формы** для одного, казалось бы, ответа, и парсер идёт по ним по порядку:
 
-| the page has | is | shows as |
-| --- | --- | --- |
-| `section.sub_entry` | the Russian direction: synonym groups, each with a gloss list and an explanation | word + transcription, explanation indented below |
-| `.t_inline_en` | the English direction, meanings on one line | one row per meaning |
-| `.tr > span` | the English direction, one meaning per span | one row per meaning, the span markup collapsed by hand so `<i>(чрезмерно)</i> подчёркивать` stays one meaning |
-| `.light_tr` | a phrase page | the translation as a single row |
+| на странице         | это                                                                          | как показывается                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `section.sub_entry` | русское направление: группы синонимов, у каждой список значений и объяснение | слово + транскрипция, объяснение с отступом ниже                                                                            |
+| `.t_inline_en`      | английское направление, значения одной строкой                               | по строке на значение                                                                                                       |
+| `.tr > span`        | английское направление, по значению на span                                  | по строке на значение; разметка span схлопывается вручную, чтобы `<i>(чрезмерно)</i> подчёркивать` осталось одним значением |
+| `.light_tr`         | страница фразы                                                               | перевод одной строкой                                                                                                       |
 
-Transcriptions live in a different block than the meanings (`.trans_sound`), and the Russian direction carries none at all — so for a Russian query the modi fetches the word page of **every** English result, in parallel, purely for the transcription. A word whose page does not answer simply appears without one
+Транскрипции лежат в другом блоке, не там, где значения (`.trans_sound`), а у русского направления их нет вовсе — поэтому на русский запрос modi параллельно тянет словарную страницу **каждого** английского результата ровно ради транскрипции. Слово, чья страница не ответила, просто появится без неё
 
-Homographs are why that block is walked rather than grepped: `transfer` is two words with two pronunciations sharing one page, and a `grep` for the first `.transcription` would confidently show you the wrong one
+Из-за омографов этот блок обходится, а не грепается: `transfer` — это два слова с двумя произношениями на одной странице, и `grep` по первому `.transcription` уверенно покажет не то
 
-## Tests
+## Тесты
 
 ```sh
-tests/run.sh              # 19 checks, no network
-tests/run.sh --update     # re-record the golden output after a deliberate change
-tests/live.sh             # the same questions, asked of the real site
-tests/refresh.sh [dir]    # re-download the saved pages named in routes
+tests/run.sh              # 19 проверок, без сети
+tests/run.sh --update     # перезаписать эталон после осознанного изменения
+tests/live.sh             # те же вопросы, но живому сайту
+tests/refresh.sh [dir]    # перекачать сохранённые страницы по таблице routes
 ```
 
-`tests/run.sh` puts a stub `curl` on PATH that serves saved pages from `tests/fixtures` according to `tests/fixtures/routes`, and diffs the rofi protocol the modi emits against `tests/golden` — so a change in how an answer is assembled shows up as a diff. Two reserved slugs stand in for the failures a saved page cannot express, a timeout and a transport error
+`tests/run.sh` кладёт в PATH подставной `curl`, который отдаёт сохранённые страницы из `tests/fixtures` по таблице `tests/fixtures/routes`, и сверяет выданный modi протокол rofi с `tests/golden` — так изменение в сборке ответа видно диффом. Два зарезервированных слага изображают отказы, которых сохранённой страницей не выразить: таймаут и транспортную ошибку
 
-Nothing in it touches the network, which is also its limit: **the fixtures keep parsing long after the site has stopped looking like them**. So a [weekly workflow](.github/workflows/upstream.yml) does two things the offline suite cannot:
+Сети тут нет вообще, и в этом же ограничение: **фикстуры продолжают парситься и после того, как сайт перестал на них походить**. Поэтому [еженедельный workflow](.github/workflows/upstream.yml) делает две вещи, недоступные офлайновому набору:
 
-- `tests/live.sh` asks wooordhunt itself the same questions and checks the shape of the answer rather than its wording
-- `tests/refresh.sh fresh` re-downloads every page `routes` names, and the whole offline suite runs **against the fresh copy**. A golden diff there is the site's markup having moved under the saved pages — the failure the offline suite can never produce on its own. The refreshed set is uploaded as a run artifact, so re-recording is a download and a commit
+- `tests/live.sh` задаёт те же вопросы самому wooordhunt и проверяет форму ответа, а не формулировки
+- `tests/refresh.sh fresh` перекачивает каждую страницу из `routes`, и весь офлайновый набор прогоняется **против свежей копии**. Разошедшийся эталон там — это и есть поехавшая вёрстка сайта, тот единственный отказ, который офлайновый набор сам породить не может. Свежий комплект выкладывается артефактом прогона, так что перезапись — это скачать и закоммитить
 
-Byte-identical HTML is deliberately not the bar — only the parsed output decides pass or fail, or an ad slot would turn the run red every week. Whether the HTML moved anyway is reported in the run summary
+Побайтовое совпадение HTML намеренно не является критерием: пройдёт или нет, решает разобранный вывод — иначе рекламный блок красил бы прогон каждую неделю. А поехал ли сам HTML, пишется в сводку прогона
 
-`nix flake check` runs the offline suite plus the packaged wrapper parsing a real page through the real `curl`, every setting reaching the script, and the Home Manager module evaluated against option stubs
+`nix flake check` прогоняет офлайновый набор плюс: упакованная обёртка разбирает настоящую страницу настоящим `curl`, каждая настройка доезжает до скрипта, модуль Home Manager вычисляется против заглушек опций
 
-## Layout
+## Структура
 
 ```
-rofi-wooordhunt.sh   the launcher: the only thing on PATH, starts rofi with the modi
-wooordhunt-modi.sh   the modi: fetch, parse, emit the rofi protocol
+rofi-wooordhunt.sh   лаунчер: единственное, что на PATH, запускает rofi с modi
+wooordhunt-modi.sh   modi: запрос, разбор, вывод протокола rofi
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh, live.sh, refresh.sh, the saved pages and the golden output
-docs/                the screenshots
-install.sh           for systems without Nix
+tests/               run.sh, live.sh, refresh.sh, сохранённые страницы и эталонный вывод
+docs/                скриншоты
+install.sh           для систем без Nix
 ```
 
-## License
+## Лицензия
 
 MIT
