@@ -25,6 +25,19 @@ Came over from my rice, **[rokokol/huix](https://github.com/rokokol/huix)**
 nix run github:rokokol/rofi-wooordhunt
 ```
 
+## Contents
+
+- [What you get back](#what-you-get-back)
+- [Install](#install)
+  - [Home Manager](#home-manager)
+  - [Any other distribution](#any-other-distribution)
+  - [Two files, one on PATH](#two-files-one-on-path)
+- [Settings](#settings)
+- [How it works](#how-it-works)
+- [Tests](#tests)
+- [Layout](#layout)
+- [License](#license)
+
 ## What you get back
 
 **Russian in** — the English words, each with its own transcription, its gloss list, and the site's explanation of when to pick this one over its synonyms:
