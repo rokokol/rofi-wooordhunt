@@ -21,6 +21,20 @@ trap 'rm -rf "$WORK"' EXIT
 
 # tests/stub shadows the real curl and the clipboard, so nothing here leaves the machine
 export PATH="$HERE/stub:$PATH"
+
+# A stub that is not executable, or one the PATH does not reach first, silently hands the
+# suite the real tool — and for curl that means the suite quietly goes to the network
+for stub in "$HERE"/stub/*; do
+  tool=$(basename "$stub")
+  if [[ ! -x $stub ]]; then
+    printf 'tests/stub/%s is not executable\n' "$tool" >&2
+    exit 1
+  fi
+  if [[ "$(command -v "$tool")" != "$stub" ]]; then
+    printf '%s resolves to %s, not to the stub\n' "$tool" "$(command -v "$tool")" >&2
+    exit 1
+  fi
+done
 # Overridable so the same suite can run against a freshly downloaded set — that is how
 # the weekly workflow notices the site's markup moving under the saved pages
 export FIXTURES="${FIXTURES:-$HERE/fixtures}"
