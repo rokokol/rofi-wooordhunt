@@ -73,7 +73,7 @@ _Theme — [ddlc-rofi-theme](https://github.com/rokokol/ddlc-rofi-theme)_
 
 That installs the package and stops there. The mode names itself through the script protocol
 
-| option                    |                                                      | default     |
+| option                    | what it does                                         | default     |
 | -------------------------- | ---------------------------------------------------- | ------------ |
 | `prompt`                  | what rofi shows as the mode name                    | `🤓`        |
 | `copyCommand`             | fed the picked entry on stdin                       | `wl-copy`   |
@@ -118,7 +118,7 @@ That detour exists because rofi refuses to run inside rofi (it keeps the outer p
 
 Every Home Manager option above is an environment variable underneath, so the same knobs work without Nix:
 
-|                              |                                                                                                                            |
+| variable                     | what it sets                                                                                                               |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `ROFI_WOOORDHUNT_PROMPT`     | the mode name rofi shows                                                                                                   |
 | `ROFI_WOOORDHUNT_COPY`       | the clipboard command                                                                                                      |
