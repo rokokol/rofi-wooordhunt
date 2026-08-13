@@ -44,7 +44,7 @@ jobs:
           fi
 
       # Refreshing is then a download and a commit, not a hand-run curl per page
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: fresh-fixtures
