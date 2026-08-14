@@ -15,3 +15,4 @@ Split out of [rokokol/huix](https://github.com/rokokol/huix), where it was a lau
 - `homeModules.default`, which supplies the bind and the modi name, and `overlays.default`
 - checks: saved pages in and the rofi protocol out, diffed against goldens, plus the packaged command, its settings and module wiring
 - `tests/live.sh` and a weekly `upstream.yml`: the live site is asked the same questions, then the saved set is re-downloaded and the offline suite runs against the fresh copy
+- a failed lookup explains itself on the message line and puts the raw cause in the row, where a bare `---` used to be — curl's own line, or the URL that came back unreadable, copyable with Enter

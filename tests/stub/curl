@@ -8,11 +8,20 @@ url="${*: -1}"
 path=${url#*://}
 path=${path#*/}
 
+# A failure is a line on stderr and an exit code, because that is what curl leaves and
+# the modi puts that line on screen — a stub that only set the code would let the suite
+# pass over an empty row. The wording is this stub's own and says so: what real curl says
+# is checked by tests/live.sh, against real curl
+die() {
+  printf 'stub curl: (%s) %s\n' "$1" "$2" >&2
+  exit "$1"
+}
+
 case "$path" in
-  word/__timeout__ | переводы/__timeout__) exit 28 ;;
-  word/__boom__ | переводы/__boom__) exit 7 ;;
+  word/__timeout__ | переводы/__timeout__) die 28 "no answer for $path" ;;
+  word/__boom__ | переводы/__boom__) die 7 "nothing listening for $path" ;;
 esac
 
 file=$(grep -v '^#' "$FIXTURES/routes" | awk -F'\t' -v p="$path" '$1 == p { print $2 }')
-[[ -n "$file" ]] || exit 22
+[[ -n "$file" ]] || die 22 "no route for $path"
 cat "$FIXTURES/$file"

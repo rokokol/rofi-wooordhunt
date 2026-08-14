@@ -1,3 +1,3 @@
 @prompt|🤓
 @message|Failed to get a response from Wooordhunt |_・)
----@info|__wooordhunt_noop__
+stub curl: (7) nothing listening for word/__boom__@info|stub curl: (7) nothing listening for word/__boom__

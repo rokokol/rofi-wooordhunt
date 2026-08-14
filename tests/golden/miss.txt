@@ -1,3 +1,3 @@
 @prompt|🤓
 @message|Nothing found: zzzqqqxxnope (╯°□°）╯︵ ┻━┻
----@info|__wooordhunt_noop__
+stub curl: (22) no route for word/zzzqqqxxnope@info|stub curl: (22) no route for word/zzzqqqxxnope

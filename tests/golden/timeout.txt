@@ -1,3 +1,3 @@
 @prompt|🤓
 @message|Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬
----@info|__wooordhunt_noop__
+stub curl: (28) no answer for word/__timeout__@info|stub curl: (28) no answer for word/__timeout__

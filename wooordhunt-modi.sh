@@ -26,7 +26,6 @@ if ! utf8_ready; then
 fi
 
 INPUT="$*"
-SENTINEL_NOOP="__wooordhunt_noop__"
 BASE_URL="${ROFI_WOOORDHUNT_URL:-https://wooordhunt.ru}"
 COPY_CMD="${ROFI_WOOORDHUNT_COPY:-wl-copy}"
 PROMPT="${ROFI_WOOORDHUNT_PROMPT:-🤓}"
@@ -36,8 +35,23 @@ TIMEOUT="${ROFI_WOOORDHUNT_TIMEOUT:-5}"
 WRAP_WIDTH="${ROFI_WOOORDHUNT_WRAP_WIDTH:-54}"
 HEAD_MAX="${ROFI_WOOORDHUNT_HEAD_WIDTH:-58}"
 
+# One directory for the whole run: curl's stderr, and later the per-word transcriptions
+WORKD=$(mktemp -d)
+trap 'rm -rf "$WORKD"' EXIT
+CURL_ERR="$WORKD/curl.err"
+
 print_message() {
   printf '\0message\x1f%s\n' "$1"
+}
+
+# Collapse every run of whitespace into one space and drop it at the ends — what `| xargs`
+# was doing here, minus the two things it also does: it runs echo, so a query of "--help"
+# came back as echo's own usage, and it unquotes, so a word like "don't" aborted the modi
+squeeze() {
+  local s
+  s=$(printf '%s' "$1" | tr -s '[:space:]' ' ')
+  s="${s# }"
+  printf '%s' "${s% }"
 }
 
 print_entry() {
@@ -46,8 +60,12 @@ print_entry() {
   printf '%s\0info\x1f%s\n' "$display" "$copy_value"
 }
 
-print_fallback_entry() {
-  printf '%s\0info\x1f%s\n' "---" "$SENTINEL_NOOP"
+# What a failed lookup leaves behind. The message line explains, in the words of this
+# program; the row is the raw thing underneath — curl's own line, or the URL that came
+# back unreadable — and it is an ordinary entry, so Enter copies it into a bug report
+print_failure() {
+  print_message "$1"
+  print_entry "$2"
 }
 
 # Break text into lines of at most $1 characters, at spaces. This is `fold -s -w`, done
@@ -97,11 +115,9 @@ print_hint_lines() {
 }
 
 if [[ -n "${ROFI_INFO:-}" ]]; then
-  if [[ "$ROFI_INFO" != "$SENTINEL_NOOP" ]]; then
-    # Unquoted on purpose — the setting carries its own flags (e.g. "xclip -selection clipboard")
-    # shellcheck disable=SC2086
-    printf '%s' "$ROFI_INFO" | $COPY_CMD
-  fi
+  # Unquoted on purpose — the setting carries its own flags (e.g. "xclip -selection clipboard")
+  # shellcheck disable=SC2086
+  printf '%s' "$ROFI_INFO" | $COPY_CMD
   exit 0
 fi
 
@@ -113,14 +129,24 @@ if [[ -z "$INPUT" ]]; then
   exit 0
 fi
 
-ORIGINAL_INPUT=$(printf '%s\n' "$INPUT" | xargs)
+ORIGINAL_INPUT=$(squeeze "$INPUT")
 PARSED_INPUT="${ORIGINAL_INPUT,,}"
 # wooordhunt uses underscores for multi-word phrases (e.g. give_up); a bare space
 # in the URL breaks curl, so we collapse spaces into "_"
 URL_SLUG="${PARSED_INPUT// /_}"
 
+# -S beside -s: quiet about progress, but still says what went wrong, and that line is
+# what the failure row shows. Kept in a file rather than dropped, so nothing has to be
+# guessed back from the exit code
 fetch_html() {
-  curl -fsSL --max-time "$TIMEOUT" "$1" 2>/dev/null
+  curl -fsSL --max-time "$TIMEOUT" "$1" 2>"${2:-$CURL_ERR}"
+}
+
+# curl's own last words, or the exit code if it went without any
+curl_said() {
+  local said
+  said=$(squeeze "$(cat "$CURL_ERR" 2>/dev/null)")
+  printf '%s' "${said:-curl exited $1}"
 }
 
 # Parse the pronunciation block of a word page into lines, one per pronounced form:
@@ -169,7 +195,7 @@ format_transcriptions() {
       us) val="$us" ;;
       uk) val="$uk" ;;
     esac
-    val=$(printf '%s' "$val" | xargs)
+    val=$(squeeze "$val")
     [[ -z "$val" ]] && continue
     part="$val"
     [[ "$count" -gt 1 && -n "$pos" ]] && part="${val} (${pos})"
@@ -182,24 +208,28 @@ format_transcriptions() {
 # a fallback. Annotates RU->EN results that lack it
 fetch_transcription() {
   local slug="${1// /_}" html
-  html=$(fetch_html "${BASE_URL}/word/${slug}" || true)
+  # These run in parallel and a missing transcription is normal, so their stderr goes
+  # nowhere rather than racing the others over the one file the failure row reads
+  html=$(fetch_html "${BASE_URL}/word/${slug}" /dev/null || true)
   format_transcriptions "$(parse_transcriptions "$html")" head
 }
 
 HTML=""
-if HTML=$(fetch_html "${BASE_URL}/переводы/${URL_SLUG}"); then
+SOURCE_URL="${BASE_URL}/переводы/${URL_SLUG}"
+if HTML=$(fetch_html "$SOURCE_URL"); then
   :
 else
-  if HTML=$(fetch_html "${BASE_URL}/word/${URL_SLUG}"); then
+  SOURCE_URL="${BASE_URL}/word/${URL_SLUG}"
+  if HTML=$(fetch_html "$SOURCE_URL"); then
     :
   else
     last_status=$?
     case "$last_status" in
-      22) print_message "Nothing found: ${PARSED_INPUT} (╯°□°）╯︵ ┻━┻" ;;
-      28) print_message "Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬" ;;
-      *) print_message "Failed to get a response from Wooordhunt |_・)" ;;
+      22) reason="Nothing found: ${PARSED_INPUT} (╯°□°）╯︵ ┻━┻" ;;
+      28) reason="Wooordhunt didn't respond in time ٩(ó｡ò۶ ♡)))♬" ;;
+      *) reason="Failed to get a response from Wooordhunt |_・)" ;;
     esac
-    print_fallback_entry
+    print_failure "$reason" "$(curl_said "$last_status")"
     exit 0
   fi
 fi
@@ -240,8 +270,7 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
   ' 2>/dev/null || true)
 
   if [[ -z "$SECTIONS" ]]; then
-    print_message "Failed to parse the Wooordhunt response (T＿T)"
-    print_fallback_entry
+    print_failure "Failed to parse the meaning groups of ${PARSED_INPUT} (T＿T)" "$SOURCE_URL"
     exit 0
   fi
 
@@ -251,10 +280,9 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
   }
 
   # Fetch each English word's transcription in parallel (RU->EN pages don't have them)
-  TMPD=$(mktemp -d)
-  trap 'rm -rf "$TMPD"' EXIT
+  TMPD="$WORKD"
   while IFS= read -r word; do
-    word=$(printf '%s' "$word" | xargs)
+    word=$(squeeze "$word")
     [[ -z "$word" ]] && continue
     (fetch_transcription "$word" >"$TMPD/$(trans_key "$word")" 2>/dev/null || true) &
   done < <(cut -f1 <<<"$SECTIONS" | sed 's@ / @\n@g' | sort -u)
@@ -262,15 +290,15 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
 
   while IFS=$'\t' read -r words gloss meaning; do
     [[ -z "$words" ]] && continue
-    gloss=$(printf '%s' "$gloss" | xargs)
-    meaning=$(printf '%s' "$meaning" | xargs)
+    gloss=$(squeeze "$gloss")
+    meaning=$(squeeze "$meaning")
 
     # The first word is what we copy; build head with each word's transcription
     mapfile -t wlist < <(printf '%s\n' "$words" | sed 's@ / @\n@g')
-    copy_word=$(printf '%s' "${wlist[0]}" | xargs)
+    copy_word=$(squeeze "${wlist[0]}")
     head=""
     for w in "${wlist[@]}"; do
-      w=$(printf '%s' "$w" | xargs)
+      w=$(squeeze "$w")
       [[ -z "$w" ]] && continue
       tr=$(cat "$TMPD/$(trans_key "$w")" 2>/dev/null || true)
       part="$w"
@@ -297,7 +325,7 @@ fi
 
 MEANINGS_LIST=""
 if printf '%s' "$HTML" | grep -q 'class="t_inline_en"'; then
-  MEANINGS_LIST=$(printf '%s' "$HTML" | pup '.t_inline_en text{}' 2>/dev/null | xargs)
+  MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup '.t_inline_en text{}' 2>/dev/null)")
 else
   # One translation per span child. We collapse each span's HTML manually rather
   # than via `text{}`, because a span may wrap an introductory word in its own tag
@@ -317,7 +345,7 @@ else
   if [[ -n "$TR_SPANS" ]]; then
     MEANINGS_LIST="$TR_SPANS"
   elif printf '%s' "$HTML" | grep -q 'class="t_inline"'; then
-    MEANINGS_LIST=$(printf '%s' "$HTML" | pup 'p.t_inline:first-of-type text{}' 2>/dev/null | xargs)
+    MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup 'p.t_inline:first-of-type text{}' 2>/dev/null)")
   else
     TR_TEXT=$(printf '%s' "$HTML" | pup '.tr text{}' 2>/dev/null | sed -n 's/^[[:space:]]*-[[:space:]]*//p' || true)
     if [[ -n "$TR_TEXT" ]]; then
@@ -333,8 +361,7 @@ if [[ -z "$MEANINGS_LIST" ]]; then
 fi
 
 if [[ -z "$MEANINGS_LIST" ]]; then
-  print_message "Failed to parse the Wooordhunt response ヽ(；▽；)ノ"
-  print_fallback_entry
+  print_failure "Nothing translatable on the page for ${PARSED_INPUT} ヽ(；▽；)ノ" "$SOURCE_URL"
   exit 0
 fi
 

@@ -38,6 +38,9 @@ expect "RU word: sections with transcriptions" '^risk \|[^|]+\|.*@info\|risk$' �
 expect "RU word: the explanation wrapped below" '^   .*@info\|.*\|nonselectable\|true$' риск
 expect "RU phrase: a Latin translation" '^[A-Za-z].*@info\|' эй там
 expect "a miss says so" '@message\|Nothing found' zzzqqqxxnope
+# The offline suite can only check that curl's stderr reaches the row; whether curl still
+# words it as "curl: (22) …" is something only real curl can answer
+expect "a miss carries curl's own line" '^curl: \([0-9]+\) .*@info\|curl: ' zzzqqqxxnope
 
 if ((fails)); then
   printf '\n%d failed — the site markup moved, re-record tests/fixtures\n' "$fails"

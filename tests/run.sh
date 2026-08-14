@@ -144,13 +144,15 @@ else
   fail "copy: expected the info value on the clipboard and no further output"
 fi
 
-# The "---" row a failed lookup leaves behind must stay inert when activated
-: >"$COPIED"
-ROFI_RETV=1 ROFI_INFO="__wooordhunt_noop__" "$MODI" >/dev/null
-if [[ ! -s "$COPIED" ]]; then
-  echo "  ✓ noop row copies nothing"
+# The message line explains the failure and the row carries whatever curl wrote on its
+# stderr, copyable — pasting it into a report is the whole point of showing it. What the
+# words are is real curl's business, so this checks the plumbing: the row is the stub's
+# line, and its copy value is the same string
+row=$(ROFI_RETV=1 "$MODI" __boom__ | readable | tail -1)
+if [[ "$row" == "stub curl: (7) "* && "${row%@info|*}" == "${row#*@info|}" ]]; then
+  echo "  ✓ the failure row is what curl said, and copies itself"
 else
-  fail "noop row: the placeholder ended up on the clipboard"
+  fail "failure row: expected the stub's stderr as both label and copy value, got $row"
 fi
 
 # Wrapping is what keeps a long gloss inside the window; a wider window has to widen it
@@ -163,10 +165,18 @@ else
 fi
 
 # The modi has no options of its own — every argument it gets is a query, "--help" included
-if ROFI_RETV=1 "$MODI" --help | readable | grep -q '@message'; then
+if ROFI_RETV=1 "$MODI" --help | readable | grep -q '^@message|Nothing found: --help'; then
   echo "  ✓ --help is a query for the modi"
 else
   fail "--help: usage leaked into the mode"
+fi
+
+# Trimming went through xargs, which unquotes — an apostrophe left the mode with an
+# empty list and the query never reached the site at all
+if ROFI_RETV=1 "$MODI" "don't" | readable | grep -qF "Nothing found: don't"; then
+  echo "  ✓ a quote in the query is a character, not syntax"
+else
+  fail "quote: the modi choked on an apostrophe"
 fi
 
 echo "launcher"
