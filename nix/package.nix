@@ -56,7 +56,7 @@ in
 
 stdenvNoCC.mkDerivation {
   pname = "rofi-wooordhunt";
-  version = "1.0.0";
+  version = "1.0.1";
 
   dontUnpack = true;
   nativeBuildInputs = [ makeWrapper ];
