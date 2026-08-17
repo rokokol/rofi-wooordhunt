@@ -114,7 +114,7 @@ rofi -show dictionary -modi "dictionary:rofi-wooordhunt,emoji:rofimoji"
 
 That detour exists because rofi refuses to run inside rofi (it keeps the outer pid in `ROFI_OUTSIDE` and checks it is still alive), so a launcher that finds `ROFI_RETV` in its environment knows it was mistaken for a mode, and hands the job to the parser rather than to a rofi that would never start.
 
-`rofi-wooordhunt --modi` prints where that parser is, which the line above does not need — it is for pointing rofi straight at it, or for looking at what actually runs. Under Nix that path is the `makeWrapper` wrapper, not the script it wraps: the bare script would find neither `curl` nor `pup`.
+`rofi-wooordhunt --modi` prints where that parser is, which the line above does not need. Under Nix that path is the `makeWrapper` wrapper, not the script it wraps: the bare script would find neither `curl` nor `pup`.
 
 ## Settings
 
