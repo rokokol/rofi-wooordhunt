@@ -90,6 +90,8 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 
 Nothing is built: both scripts are copied to `$PREFIX/share/rofi-wooordhunt`, and only the launcher is symlinked into `$PREFIX/bin`
 
+A package recipe can stage the same files without duplicating that logic: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
+
 Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
 
 Then bind it by hand:

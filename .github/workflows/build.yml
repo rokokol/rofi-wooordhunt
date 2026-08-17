@@ -36,6 +36,10 @@ jobs:
             -c env ROFI_WOOORDHUNT=$PWD/out/bin/rofi-wooordhunt \
             ROFI_WOOORDHUNT_MODI=$PWD/out/share/rofi-wooordhunt/wooordhunt-modi.sh \
             ./tests/run.sh
+          ./install.sh --destdir "$PWD/stage" --prefix /usr
+          test -L stage/usr/bin/rofi-wooordhunt
+          stage/usr/bin/rofi-wooordhunt --help >/dev/null
+          ! DESTDIR=$PWD/bad PREFIX=usr ./install.sh >/dev/null 2>&1
       - run: nix fmt -- --ci
 
   shell:

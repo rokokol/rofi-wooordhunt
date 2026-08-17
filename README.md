@@ -90,6 +90,8 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh для пользов�
 
 Ничего не собирается: оба скрипта копируются в `$PREFIX/share/rofi-wooordhunt`, а в `$PREFIX/bin` линкуется только лаунчер
 
+Рецепт пакета может разложить те же файлы без копирования этой логики: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
+
 Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`
 
 Дальше бинд руками:
