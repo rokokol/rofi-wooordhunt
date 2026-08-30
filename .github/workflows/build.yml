@@ -49,5 +49,5 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: cachix/install-nix-action@v31
-      - run: nix run nixpkgs#shellcheck -- install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
-      - run: nix run nixpkgs#shfmt -- -d -i 2 -ci install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
+      - run: nix develop --no-write-lock-file --command shellcheck install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
+      - run: nix develop --no-write-lock-file --command shfmt -d -i 2 -ci install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
