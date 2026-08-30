@@ -34,7 +34,6 @@ nix run github:rokokol/rofi-wooordhunt
 - [How it works](#how-it-works)
 - [Tests](#tests)
 - [Layout](#layout)
-- [License](#license)
 
 ## What you get back
 
@@ -179,7 +178,3 @@ tests/               run.sh, live.sh, refresh.sh, the saved pages and the golden
 docs/                the screenshots
 install.sh           for systems without Nix
 ```
-
-## License
-
-MIT
