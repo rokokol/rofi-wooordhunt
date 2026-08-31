@@ -21,6 +21,8 @@ rofi-wooordhunt — a rofi dictionary translating both ways through wooordhunt.r
   rofi-wooordhunt --modi   print where that parser lives. Not needed for the line
                            above; it is for pointing rofi straight at it, or for
                            looking at what actually runs
+  rofi-wooordhunt --version
+                           print the version
 
 Type in either direction; Enter copies the highlighted entry. Environment:
 
@@ -45,6 +47,20 @@ fi
 case "${1:-}" in
   -h | --help)
     usage
+    exit 0
+    ;;
+  # VERSION sits beside the script (the repo root in a checkout, share/rofi-wooordhunt
+  # once installed) or one prefix over (the Nix package wraps the launcher into bin
+  # while VERSION stays in share)
+  -v | --version)
+    self_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+    for v in "$self_dir/VERSION" "$self_dir/../share/rofi-wooordhunt/VERSION"; do
+      if [[ -f "$v" ]]; then
+        printf 'rofi-wooordhunt %s\n' "$(cat "$v")"
+        exit 0
+      fi
+    done
+    printf 'rofi-wooordhunt unknown\n'
     exit 0
     ;;
   # The parser is off PATH, so this is the only way to name it from outside. Under Nix

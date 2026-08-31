@@ -9,6 +9,10 @@
 ![Nix](https://img.shields.io/badge/Nix-flake-7EBAE4?style=flat&logo=nixos&logoColor=white)
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml)
+[![debian](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml)
+[![ubuntu](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-ubuntu.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-ubuntu.yml)
+[![arch](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-arch.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-arch.yml)
+[![fedora](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-fedora.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-fedora.yml)
 
 [Русский](README.md)
 
@@ -87,11 +91,11 @@ cd rofi-wooordhunt
 sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 ```
 
-Nothing is built: both scripts are copied to `$PREFIX/share/rofi-wooordhunt`, and only the launcher is symlinked into `$PREFIX/bin`
+Nothing is built: both scripts are copied to `$PREFIX/share/rofi-wooordhunt`, and only the launcher is symlinked into `$PREFIX/bin`. Every installed file lands in a manifest, and `./install.sh --uninstall` removes exactly that. The nix package's options exist on the installer too: `--prompt`, `--copy-command`, `--wrap-width`, `--head-width`, `--timeout` — they swap the symlink for a short wrapper exporting the defaults, and your own environment still wins. Tab completion for the installer itself: `source completions/install.sh.bash` (or `.zsh`)
 
 A package recipe can stage the same files without duplicating that logic: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
 
-Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11
+Needs `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs`, and a clipboard tool — `wl-copy` by default, `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"` on X11. The installer downloads nothing itself: when something is missing it refuses and prints your distribution's own command as a `$ …` line — pup comes from the AUR on Arch (`paru -S pup`), everywhere else a `go install` into a system-wide `GOBIN`
 
 Then bind it by hand:
 
@@ -155,6 +159,9 @@ tests/run.sh              # 19 checks, no network
 tests/run.sh --update     # re-record the golden output after a deliberate change
 tests/live.sh             # the same questions, asked of the real site
 tests/refresh.sh [dir]    # re-download the saved pages named in routes
+tests/distro.sh debian    # a real root install in a docker container: preflight refusal →
+                          # its own printed commands → install → suite → uninstall;
+                          # also ubuntu, arch, fedora
 ```
 
 `tests/run.sh` puts a stub `curl` on PATH that serves saved pages from `tests/fixtures` according to `tests/fixtures/routes`, and diffs the rofi protocol the modi emits against `tests/golden` — so a change in how an answer is assembled shows up as a diff. Two reserved slugs stand in for the failures a saved page cannot express, a timeout and a transport error

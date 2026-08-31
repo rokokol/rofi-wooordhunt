@@ -28,6 +28,10 @@
 
 let
   # Each isolated, so editing the README or a fixture doesn't rebuild the package
+  versionFile = builtins.path {
+    name = "rofi-wooordhunt-VERSION";
+    path = ../VERSION;
+  };
   launcher = builtins.path {
     name = "rofi-wooordhunt.sh";
     path = ../rofi-wooordhunt.sh;
@@ -56,7 +60,8 @@ in
 
 stdenvNoCC.mkDerivation {
   pname = "rofi-wooordhunt";
-  version = "1.0.1";
+  # VERSION is the one place the number lives; CI holds CHANGELOG.md to it
+  version = lib.fileContents ../VERSION;
 
   dontUnpack = true;
   nativeBuildInputs = [ makeWrapper ];
@@ -64,6 +69,9 @@ stdenvNoCC.mkDerivation {
 
   installPhase = ''
     runHook preInstall
+
+    # --version finds this one prefix over from the wrapped launcher in bin
+    install -Dm644 ${versionFile} $out/share/rofi-wooordhunt/VERSION
 
     install -Dm755 ${launcher} $out/bin/rofi-wooordhunt
     # libexec, not bin: rofi runs the modi, a human never does

@@ -22,6 +22,13 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: cachix/install-nix-action@v31
+      - name: VERSION matches CHANGELOG
+        run: |
+          ver=$(cat VERSION)
+          grep -qF "## [$ver]" CHANGELOG.md || {
+            echo "VERSION says $ver but CHANGELOG.md has no ## [$ver] heading" >&2
+            exit 1
+          }
       - run: nix build --no-write-lock-file .#rofi-wooordhunt
       # tests, package-smoke, package-settings, module-wiring, scripts-lint
       - run: nix flake check --no-write-lock-file
@@ -32,16 +39,33 @@ jobs:
           PREFIX=$PWD/out ./install.sh
           test -L out/bin/rofi-wooordhunt
           test ! -e out/bin/wooordhunt-modi
+          test -f out/share/rofi-wooordhunt/install-manifest
+          out/bin/rofi-wooordhunt --version | grep -xF "rofi-wooordhunt $(cat VERSION)"
           nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq \
-            -c env ROFI_WOOORDHUNT=$PWD/out/bin/rofi-wooordhunt \
-            ROFI_WOOORDHUNT_MODI=$PWD/out/share/rofi-wooordhunt/wooordhunt-modi.sh \
+            -c env ROFI_WOOORDHUNT="$PWD/out/bin/rofi-wooordhunt" \
+            ROFI_WOOORDHUNT_MODI="$PWD/out/share/rofi-wooordhunt/wooordhunt-modi.sh" \
             ./tests/run.sh
+          # The baking flags swap the symlink for a wrapper; a run without them puts the
+          # symlink back — the flags are declarative
+          PREFIX=$PWD/out ./install.sh --prompt test --timeout 7
+          test ! -L out/bin/rofi-wooordhunt
+          grep -qF 'ROFI_WOOORDHUNT_TIMEOUT:-7' out/bin/rofi-wooordhunt
+          PREFIX=$PWD/out ./install.sh
+          test -L out/bin/rofi-wooordhunt
+          # Uninstall consumes the manifest and leaves nothing of ours behind
+          PREFIX=$PWD/out ./install.sh --uninstall
+          test ! -e out/bin/rofi-wooordhunt
+          test ! -e out/share/rofi-wooordhunt
           ./install.sh --destdir "$PWD/stage" --prefix /usr
           test -L stage/usr/bin/rofi-wooordhunt
           stage/usr/bin/rofi-wooordhunt --help >/dev/null
+          DESTDIR=$PWD/stage PREFIX=/usr ./install.sh --uninstall
+          test ! -e stage/usr/share/rofi-wooordhunt
           ! DESTDIR=$PWD/bad PREFIX=usr ./install.sh >/dev/null 2>&1
       - run: nix fmt -- --ci
 
+  # The one file list lives in the flake's scripts-lint check — this job is a fast,
+  # separately-named status for it, not a second copy of the commands
   shell:
     runs-on: ubuntu-latest
     steps:
@@ -49,5 +73,4 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: cachix/install-nix-action@v31
-      - run: nix develop --no-write-lock-file --command shellcheck install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
-      - run: nix develop --no-write-lock-file --command shfmt -d -i 2 -ci install.sh rofi-wooordhunt.sh wooordhunt-modi.sh tests/run.sh tests/live.sh tests/refresh.sh tests/stub/*
+      - run: nix build --no-write-lock-file .#checks.x86_64-linux.scripts-lint

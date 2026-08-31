@@ -9,6 +9,10 @@
 ![Nix](https://img.shields.io/badge/Nix-flake-7EBAE4?style=flat&logo=nixos&logoColor=white)
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml)
+[![debian](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml)
+[![ubuntu](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-ubuntu.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-ubuntu.yml)
+[![arch](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-arch.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-arch.yml)
+[![fedora](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-fedora.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-fedora.yml)
 
 [English](README.en.md)
 
@@ -87,11 +91,11 @@ cd rofi-wooordhunt
 sudo ./install.sh          # PREFIX=~/.local ./install.sh для пользовательской установки
 ```
 
-Ничего не собирается: оба скрипта копируются в `$PREFIX/share/rofi-wooordhunt`, а в `$PREFIX/bin` линкуется только лаунчер
+Ничего не собирается: оба скрипта копируются в `$PREFIX/share/rofi-wooordhunt`, а в `$PREFIX/bin` линкуется только лаунчер. Каждый установленный файл попадает в манифест, и `./install.sh --uninstall` убирает ровно его. Опции nix-пакета есть и у инсталлера: `--prompt`, `--copy-command`, `--wrap-width`, `--head-width`, `--timeout` — они подменяют симлинк короткой обёрткой с дефолтами, ваше окружение всё равно главнее. Автодополнение для самого инсталлера — `source completions/install.sh.bash` (или `.zsh`)
 
 Рецепт пакета может разложить те же файлы без копирования этой логики: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
 
-Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`
+Нужны `bash`, `curl`, [`pup`](https://github.com/ericchiang/pup), `jq`, `awk`, `sed`, `grep`, `xargs` и что-нибудь для буфера — по умолчанию `wl-copy`, на X11 `ROFI_WOOORDHUNT_COPY="xclip -selection clipboard"`. Сам инсталлер ничего не докачивает: если чего-то нет, он откажет и напечатает команду вашего дистрибутива строкой `$ …` — pup на Arch берётся из AUR (`paru -S pup`), в остальных местах ставится `go install` в системный `GOBIN`
 
 Дальше бинд руками:
 
@@ -155,6 +159,9 @@ tests/run.sh              # 19 проверок, без сети
 tests/run.sh --update     # перезаписать эталон после осознанного изменения
 tests/live.sh             # те же вопросы, но живому сайту
 tests/refresh.sh [dir]    # перекачать сохранённые страницы по таблице routes
+tests/distro.sh debian    # настоящая установка root'ом в docker-контейнере: отказ preflight →
+                          # его же напечатанные команды → установка → сюита → uninstall;
+                          # ещё ubuntu, arch, fedora
 ```
 
 `tests/run.sh` кладёт в PATH подставной `curl`, который отдаёт сохранённые страницы из `tests/fixtures` по таблице `tests/fixtures/routes`, и сверяет выданный modi протокол rofi с `tests/golden` — так изменение в сборке ответа видно диффом. Два зарезервированных слага изображают отказы, которых сохранённой страницей не выразить: таймаут и транспортную ошибку

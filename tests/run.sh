@@ -234,6 +234,14 @@ else
   fail "--help: the settings are undocumented"
 fi
 
+echo "version"
+want="rofi-wooordhunt $(cat "$REPO/VERSION")"
+if [[ "$("$LAUNCHER" --version)" == "$want" && "$("$LAUNCHER" -v)" == "$want" ]]; then
+  echo "  ✓ --version and -v answer with the VERSION file's number"
+else
+  fail "--version does not match VERSION: $("$LAUNCHER" --version)"
+fi
+
 if ((fails)); then
   printf '\n%d failed\n' "$fails"
   exit 1

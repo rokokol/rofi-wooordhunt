@@ -26,6 +26,18 @@
         name = "rofi-wooordhunt-tests";
         path = ./tests;
       };
+      installer = builtins.path {
+        name = "install.sh";
+        path = ./install.sh;
+      };
+      completionsDir = builtins.path {
+        name = "rofi-wooordhunt-completions";
+        path = ./completions;
+      };
+      versionFile = builtins.path {
+        name = "rofi-wooordhunt-VERSION";
+        path = ./VERSION;
+      };
     in
     {
       packages = forAllSystems (pkgs: rec {
@@ -71,6 +83,7 @@
                 mkdir -p repo
                 cp ${launcher} repo/rofi-wooordhunt.sh
                 cp ${modi} repo/wooordhunt-modi.sh
+                cp ${versionFile} repo/VERSION
                 cp -r ${testsDir} repo/tests
                 chmod -R +w repo
                 patchShebangs repo
@@ -192,14 +205,24 @@
                 nativeBuildInputs = [
                   pkgs.shellcheck
                   pkgs.shfmt
+                  pkgs.zsh
                 ];
               }
               ''
-                files="${launcher} ${modi} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy"
+                files="${launcher} ${modi} ${installer} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/distro.sh ${testsDir}/check-completions.sh ${testsDir}/stub/curl ${testsDir}/stub/fake-copy ${completionsDir}/install.sh.bash"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086
                 shfmt -d -i 2 -ci $files
+                # zsh is not shellcheck's language; a parse is what can be checked
+                zsh -n ${completionsDir}/install.sh.zsh
+
+                # install.sh and its completions must not drift apart
+                mkdir -p repo/tests
+                cp ${installer} repo/install.sh
+                cp -r ${completionsDir} repo/completions
+                cp ${testsDir}/check-completions.sh repo/tests/
+                bash repo/tests/check-completions.sh
                 touch $out
               '';
         }

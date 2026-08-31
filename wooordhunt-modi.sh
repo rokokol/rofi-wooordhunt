@@ -9,11 +9,14 @@ set -euo pipefail
 # a C locale fold and ${#s} count bytes instead and the layout collapses. Which UTF-8
 # locale exists is not something to assume: setlocale silently keeps the old one when the
 # name is unknown, so ask a two-byte character how long it is and take the first that
-# answers 1. Everything downstream is a child process sharing this LC_ALL
+# answers 1. Everything downstream is a child process sharing this LC_ALL.
 # Asked of a child process on purpose: bash keeps its own locale when setlocale rejects a
-# name, but still exports the rejected one, so only a child reports what fold will see
+# name, but still exports the rejected one, so only a child reports the truth. And asked
+# of a child *bash*, because bash is what does the counting downstream — wc -m stopped
+# being a witness the day Ubuntu swapped GNU coreutils for uutils, whose wc counts UTF-8
+# characters no matter what the locale says
 utf8_ready() {
-  (($(printf 'ä' | wc -m) == 1))
+  [[ "$(bash -c 's=ä; echo "${#s}"')" == 1 ]]
 }
 [[ -n "${ROFI_WOOORDHUNT_LOCALE:-}" ]] && export LC_ALL="$ROFI_WOOORDHUNT_LOCALE"
 if ! utf8_ready; then
@@ -264,7 +267,7 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
          | (([.text] + [.children[]?.text]) | map(select(. != null and (. | test("\\S")))) | first // "")
          | select(. != "")
        ] | join(" / ")) as $words |
-      (($h3.text // "") | (capture("—\\s*(?<g>.*)")?.g) // "") as $gloss |
+      (($h3.text // "") | ((capture("—\\s*(?<g>.*)") | .g)? // "")) as $gloss |
       ((.children[]? | select(.tag=="p" and ((.class // "") | test("meaning"))) | .text) // "") as $meaning |
       [$words, $gloss, $meaning] | @tsv
   ' 2>/dev/null || true)
