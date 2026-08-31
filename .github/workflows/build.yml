@@ -36,7 +36,10 @@ jobs:
       # symlink, keeps the modi off bin, and the suite has to pass against both copies
       - name: install.sh works
         run: |
-          PREFIX=$PWD/out ./install.sh
+          # The runner has no pup, and the preflight rightly refuses without it — the
+          # deps come from nix here; the distro suite is where the printed guidance
+          # provides them for real
+          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh
           test -L out/bin/rofi-wooordhunt
           test ! -e out/bin/wooordhunt-modi
           test -f out/share/rofi-wooordhunt/install-manifest
@@ -47,16 +50,16 @@ jobs:
             ./tests/run.sh
           # The baking flags swap the symlink for a wrapper; a run without them puts the
           # symlink back — the flags are declarative
-          PREFIX=$PWD/out ./install.sh --prompt test --timeout 7
+          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh --prompt test --timeout 7
           test ! -L out/bin/rofi-wooordhunt
           grep -qF 'ROFI_WOOORDHUNT_TIMEOUT:-7' out/bin/rofi-wooordhunt
-          PREFIX=$PWD/out ./install.sh
+          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh
           test -L out/bin/rofi-wooordhunt
           # Uninstall consumes the manifest and leaves nothing of ours behind
           PREFIX=$PWD/out ./install.sh --uninstall
           test ! -e out/bin/rofi-wooordhunt
           test ! -e out/share/rofi-wooordhunt
-          ./install.sh --destdir "$PWD/stage" --prefix /usr
+          nix shell nixpkgs#pup -c ./install.sh --destdir "$PWD/stage" --prefix /usr
           test -L stage/usr/bin/rofi-wooordhunt
           stage/usr/bin/rofi-wooordhunt --help >/dev/null
           DESTDIR=$PWD/stage PREFIX=/usr ./install.sh --uninstall
