@@ -17,14 +17,14 @@ jobs:
 
       # Asks the live site the same questions and checks the shape of the answer
       - name: the site still answers the way the parser expects
-        run: nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c ./tests/live.sh
+        run: nix develop --no-write-lock-file -c ./tests/live.sh
 
       # …then re-downloads the saved set and runs the whole offline suite against it. A
       # golden diff here is the site's markup having moved under the fixtures — the one
       # failure the offline suite can never produce on its own
       - name: the saved pages still parse like the pages being served
         run: |
-          nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq -c bash -c '
+          nix develop --no-write-lock-file -c bash -c '
             ./tests/refresh.sh fresh
             FIXTURES=$PWD/fresh ./tests/run.sh'
 

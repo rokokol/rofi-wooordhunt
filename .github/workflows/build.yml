@@ -37,29 +37,30 @@ jobs:
       - name: install.sh works
         run: |
           # The runner has no pup, and the preflight rightly refuses without it — the
-          # deps come from nix here; the distro suite is where the printed guidance
-          # provides them for real
-          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh
+          # deps come from the flake's own lock (the dev shell), never from an unpinned
+          # registry lookup; the distro suite is where the printed guidance provides
+          # them for real
+          PREFIX=$PWD/out nix develop --no-write-lock-file -c ./install.sh
           test -L out/bin/rofi-wooordhunt
           test ! -e out/bin/wooordhunt-modi
           test -f out/share/rofi-wooordhunt/install-manifest
           out/bin/rofi-wooordhunt --version | grep -xF "rofi-wooordhunt $(cat VERSION)"
-          nix shell nixpkgs#curl nixpkgs#pup nixpkgs#jq \
+          nix develop --no-write-lock-file \
             -c env ROFI_WOOORDHUNT="$PWD/out/bin/rofi-wooordhunt" \
             ROFI_WOOORDHUNT_MODI="$PWD/out/share/rofi-wooordhunt/wooordhunt-modi.sh" \
             ./tests/run.sh
           # The baking flags swap the symlink for a wrapper; a run without them puts the
           # symlink back — the flags are declarative
-          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh --prompt test --timeout 7
+          PREFIX=$PWD/out nix develop --no-write-lock-file -c ./install.sh --prompt test --timeout 7
           test ! -L out/bin/rofi-wooordhunt
           grep -qF 'ROFI_WOOORDHUNT_TIMEOUT:-7' out/bin/rofi-wooordhunt
-          PREFIX=$PWD/out nix shell nixpkgs#pup -c ./install.sh
+          PREFIX=$PWD/out nix develop --no-write-lock-file -c ./install.sh
           test -L out/bin/rofi-wooordhunt
           # Uninstall consumes the manifest and leaves nothing of ours behind
           PREFIX=$PWD/out ./install.sh --uninstall
           test ! -e out/bin/rofi-wooordhunt
           test ! -e out/share/rofi-wooordhunt
-          nix shell nixpkgs#pup -c ./install.sh --destdir "$PWD/stage" --prefix /usr
+          nix develop --no-write-lock-file -c ./install.sh --destdir "$PWD/stage" --prefix /usr
           test -L stage/usr/bin/rofi-wooordhunt
           stage/usr/bin/rofi-wooordhunt --help >/dev/null
           DESTDIR=$PWD/stage PREFIX=/usr ./install.sh --uninstall
@@ -76,4 +77,10 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: cachix/install-nix-action@v31
+      - name: CI tools come from the lock, not the registry
+        run: |
+          if grep -rEn 'nix (run|shell) nixpkgs#' .github/workflows; then
+            echo "unpinned registry lookup in a workflow — pin the tool in the flake's dev shell and use nix develop" >&2
+            exit 1
+          fi
       - run: nix build --no-write-lock-file .#checks.x86_64-linux.scripts-lint
