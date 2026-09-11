@@ -27,8 +27,10 @@ rofi-wooordhunt.sh   the launcher: the only thing on PATH, runs rofi with the mo
 wooordhunt-modi.sh   the modi: query, parse, rofi protocol out
 VERSION              the one place the version lives — package.nix, --version and CI read it
 completions/         install.sh's own completions, spelled by hand
+check-sh.sh          vendored from bash-best-practices, holds install.sh's help
+                     and completions to its parser
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh, live.sh, refresh.sh, distro.sh, check-completions.sh, fixtures, goldens
+tests/               run.sh, live.sh, refresh.sh, distro.sh, fixtures, goldens
 docs/                the screenshots
 install.sh           for systems without Nix
 ```
