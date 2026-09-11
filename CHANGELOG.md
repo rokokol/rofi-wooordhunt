@@ -4,6 +4,10 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ## [Unreleased]
 
+### Changed
+
+- `install.sh` now exits 2, not 1, on a usage error — an unknown flag, a relative `--prefix`/`--destdir`, a value flag given without a value, a non-numeric `--wrap-width`/`--head-width`/`--timeout`, or `--uninstall` combined with a baking flag — and `--help` ends with the `Exit` sentence naming every code it can produce; a missing dependency in the preflight still exits 1
+
 ## [1.1.0] - 2026-08-31
 
 ### Added

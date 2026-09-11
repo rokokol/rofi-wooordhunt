@@ -49,41 +49,57 @@ flags above bake — rofi-wooordhunt --help documents them all):
   ROFI_WOOORDHUNT_PROMPT, ROFI_WOOORDHUNT_COPY, ROFI_WOOORDHUNT_URL,
   ROFI_WOOORDHUNT_TIMEOUT, ROFI_WOOORDHUNT_WRAP_WIDTH, ROFI_WOOORDHUNT_HEAD_WIDTH,
   ROFI_WOOORDHUNT_LOCALE, ROFI_WOOORDHUNT_MODI
+
+Exit 0 done, 1 when the install could not be made — a dependency missing, a manifest
+that cannot be written — and 2 on a usage error.
 EOF
+}
+
+die() { # the request itself is wrong
+  printf 'install.sh: %s\n' "$1" >&2
+  exit 2
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --prefix)
-      PREFIX="${2:?directory required}"
+      # Not ${2:?}: that exits 1 with bash's own message, and a usage error is 2
+      (($# >= 2)) || die "$1 needs a directory"
+      PREFIX="$2"
       shift 2
       ;;
     --destdir)
-      DESTDIR="${2:?directory required}"
+      (($# >= 2)) || die "$1 needs a directory"
+      DESTDIR="$2"
       shift 2
       ;;
     --prompt)
-      PROMPT="${2:?value required by $1}"
+      (($# >= 2)) || die "$1 needs a value"
+      PROMPT="$2"
       config_given="$1"
       shift 2
       ;;
     --copy-command)
-      COPY_COMMAND="${2:?value required by $1}"
+      (($# >= 2)) || die "$1 needs a value"
+      COPY_COMMAND="$2"
       config_given="$1"
       shift 2
       ;;
     --wrap-width)
-      WRAP_WIDTH="${2:?value required by $1}"
+      (($# >= 2)) || die "$1 needs a value"
+      WRAP_WIDTH="$2"
       config_given="$1"
       shift 2
       ;;
     --head-width)
-      HEAD_WIDTH="${2:?value required by $1}"
+      (($# >= 2)) || die "$1 needs a value"
+      HEAD_WIDTH="$2"
       config_given="$1"
       shift 2
       ;;
     --timeout)
-      TIMEOUT="${2:?value required by $1}"
+      (($# >= 2)) || die "$1 needs a value"
+      TIMEOUT="$2"
       config_given="$1"
       shift 2
       ;;
@@ -101,24 +117,17 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       usage >&2
-      exit 1
+      exit 2
       ;;
   esac
 done
 
-if [[ "$PREFIX" != /* ]]; then
-  echo "install.sh: PREFIX must be absolute: $PREFIX" >&2
-  exit 1
-fi
+[[ "$PREFIX" == /* ]] || die "PREFIX must be absolute: $PREFIX"
 if ((UNINSTALL)) && [[ -n "$config_given" ]]; then
-  echo "install.sh: --uninstall does not combine with $config_given" >&2
-  exit 1
+  die "--uninstall does not combine with $config_given"
 fi
 for number in "$WRAP_WIDTH" "$HEAD_WIDTH" "$TIMEOUT"; do
-  if [[ -n "$number" && ! "$number" =~ ^[0-9]+$ ]]; then
-    echo "install.sh: a number is required: $number" >&2
-    exit 1
-  fi
+  [[ -z "$number" || "$number" =~ ^[0-9]+$ ]] || die "a number is required: $number"
 done
 
 root="${DESTDIR%/}$PREFIX"
