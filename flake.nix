@@ -213,7 +213,7 @@
                 ];
               }
               ''
-                files="${launcher} ${modi} ${installer} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/distro.sh ${checkSh} ${testsDir}/stub/curl ${testsDir}/stub/fake-copy ${completionsDir}/install.sh.bash"
+                files="${launcher} ${modi} ${installer} ${testsDir}/run.sh ${testsDir}/live.sh ${testsDir}/refresh.sh ${testsDir}/distro.sh ${testsDir}/installer.sh ${checkSh} ${testsDir}/stub/curl ${testsDir}/stub/fake-copy ${completionsDir}/install.sh.bash"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086
@@ -228,6 +228,39 @@
                 cp -r ${completionsDir} repo/completions
                 cp ${checkSh} repo/check-sh.sh
                 (cd repo && bash ./check-sh.sh -c completions/install.sh.bash completions/install.sh.zsh install.sh)
+                touch $out
+              '';
+
+          # The fast installer suite, in the sandbox: flag surface and exit codes, a real
+          # install and uninstall into a temp --prefix, and the preflight refusal — every-
+          # thing tests/distro.sh also needs docker and root for. tests/installer.sh builds
+          # a deliberately install(1)-less PATH of these to exercise that refusal
+          installer-suite =
+            pkgs.runCommand "installer-suite"
+              {
+                nativeBuildInputs = [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.curl
+                  pkgs.findutils
+                  pkgs.gawk
+                  pkgs.gnugrep
+                  pkgs.gnused
+                  pkgs.jq
+                  pkgs.pup
+                ];
+              }
+              ''
+                mkdir -p repo/tests
+                cp ${launcher} repo/rofi-wooordhunt.sh
+                cp ${modi} repo/wooordhunt-modi.sh
+                cp ${installer} repo/install.sh
+                cp ${versionFile} repo/VERSION
+                cp ${testsDir}/installer.sh repo/tests/
+                chmod -R +w repo
+                chmod +x repo/install.sh repo/tests/*.sh
+                patchShebangs repo >/dev/null
+                HOME=$PWD bash repo/tests/installer.sh "$PWD/repo"
                 touch $out
               '';
         }

@@ -159,6 +159,7 @@ tests/run.sh              # 19 checks, no network
 tests/run.sh --update     # re-record the golden output after a deliberate change
 tests/live.sh             # the same questions, asked of the real site
 tests/refresh.sh [dir]    # re-download the saved pages named in routes
+tests/installer.sh        # install.sh's flags, exit codes and a real install/uninstall — sandboxed
 tests/distro.sh debian    # a real root install in a docker container: preflight refusal →
                           # its own printed commands → install → suite → uninstall;
                           # also ubuntu, arch, fedora
@@ -173,7 +174,7 @@ Nothing in it touches the network, which is also its limit: **the fixtures keep 
 
 Byte-identical HTML is deliberately not the bar — only the parsed output decides pass or fail, or an ad slot would turn the run red every week. Whether the HTML moved anyway is reported in the run summary
 
-`nix flake check` runs the offline suite plus the packaged wrapper parsing a real page through the real `curl`, every setting reaching the script, and the Home Manager module evaluated against option stubs
+`nix flake check` runs the offline suite plus `tests/installer.sh`, the packaged wrapper parsing a real page through the real `curl`, every setting reaching the script, and the Home Manager module evaluated against option stubs
 
 ## Layout
 

@@ -12,11 +12,12 @@ The seam in `rokokol/huix` is `home-manager/desktop/hyprland/services/rofi-wooor
 
 ```sh
 nix build
-nix flake check          # tests, the packaged command, its settings, module wiring, shell lint
-./tests/run.sh           # saved pages in, the rofi protocol out, diffed against tests/golden
-./tests/live.sh          # the real site, checking the shape of the answer (needs the network)
-./tests/refresh.sh out   # re-download the saved set
-./tests/distro.sh debian # real root install in docker; also ubuntu, arch, fedora
+nix flake check           # tests, installer-suite, the packaged command, settings, module wiring, shell lint
+./tests/run.sh             # saved pages in, the rofi protocol out, diffed against tests/golden
+./tests/live.sh            # the real site, checking the shape of the answer (needs the network)
+./tests/refresh.sh out     # re-download the saved set
+./tests/installer.sh       # install.sh's flags, exit codes, real install/uninstall, refusal — sandboxed
+./tests/distro.sh debian   # real root install in docker; also ubuntu, arch, fedora
 nix fmt -- --ci
 ```
 
@@ -30,7 +31,7 @@ completions/         install.sh's own completions, spelled by hand
 check-sh.sh          vendored from bash-best-practices, holds install.sh's help
                      and completions to its parser
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh, live.sh, refresh.sh, distro.sh, fixtures, goldens
+tests/               run.sh, live.sh, refresh.sh, installer.sh, distro.sh, fixtures, goldens
 docs/                the screenshots
 install.sh           for systems without Nix
 ```
