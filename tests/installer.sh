@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
-# The fast suite for install.sh: flag surface and exit codes, a real install and uninstall
-# into a temp --prefix, and the preflight refusal — everything that needs no docker
-# container and no network. tests/distro.sh is what checks a full distribution actually
-# satisfies the printed guidance (see CLAUDE.md)
+# tests/distro.sh is what checks a full distribution actually satisfies the printed
+# guidance (see CLAUDE.md)
 set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+tests/installer.sh — the fast suite for install.sh: flag surface and exit codes, a
+real install and uninstall into a temp --prefix, and the preflight refusal —
+everything that needs no docker container
+
+  tests/installer.sh [REPO]
+
+REPO is the checkout to install from (default: the one this script lives in)
+
+Nothing here reaches the network
+Exit: 0 all passed, 1 a check failed
+EOF
+}
+[[ "${1:-}" == "-h" || "${1:-}" == "--help" || "${1:-}" == "help" ]] && {
+  usage
+  exit 0
+}
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO="${1:-$(dirname "$HERE")}"

@@ -1,12 +1,26 @@
 #!/usr/bin/env bash
 # Drives the modi against saved pages and diffs the rofi protocol it emits against
-# tests/golden. Nothing here touches the network: a stub curl on PATH serves
-# tests/fixtures according to tests/fixtures/routes
-#
-#   tests/run.sh           check against the golden files
-#   tests/run.sh --update  re-record them after a deliberate change
+# tests/golden: a stub curl on PATH serves tests/fixtures according to
+# tests/fixtures/routes
 
 set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+tests/run.sh — the fast suite for rofi-wooordhunt: drives the modi against saved
+pages and diffs the rofi protocol it emits against tests/golden
+
+  tests/run.sh           check against the golden files
+  tests/run.sh --update  re-record them after a deliberate change
+
+Nothing here reaches the network: a stub curl on PATH serves tests/fixtures
+Exit: 0 all passed, 1 a check failed
+EOF
+}
+[[ "${1:-}" == "-h" || "${1:-}" == "--help" || "${1:-}" == "help" ]] && {
+  usage
+  exit 0
+}
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(dirname "$HERE")
