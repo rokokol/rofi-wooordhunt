@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Drives the modi against saved pages and diffs the rofi protocol it emits against
-# tests/golden: a stub curl on PATH serves tests/fixtures according to
-# tests/fixtures/routes
+# Which saved page the stub curl answers with is decided by tests/fixtures/routes, so a
+# new case needs its route there as much as its fixture
 
 set -euo pipefail
 
