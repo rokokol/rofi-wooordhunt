@@ -207,6 +207,11 @@
             pkgs.runCommand "scripts-lint"
               {
                 nativeBuildInputs = [
+                  # check-sh.sh below is moving to reading the script it is given as a tree,
+                  # out of `shfmt --to-json`, with jq flattening that tree into rows. This
+                  # sandbox has a scrubbed PATH, so the jq named on module-wiring above is
+                  # not reachable here and the tool has to be named on this derivation too
+                  pkgs.jq
                   pkgs.shellcheck
                   pkgs.shfmt
                   pkgs.zsh
