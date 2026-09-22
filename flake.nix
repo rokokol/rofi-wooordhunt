@@ -6,7 +6,7 @@
   outputs =
     { self, nixpkgs }:
     let
-      lib = nixpkgs.lib;
+      inherit (nixpkgs) lib;
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -151,7 +151,7 @@
                 timeout = 9;
               };
             in
-            pkgs.runCommand "package-settings" { nativeBuildInputs = [ pkgs.gnugrep ]; } ''
+            pkgs.runCommand "package-settings" { nativeBuildInputs = with pkgs; [ gnugrep ]; } ''
               export HOME=$PWD PATH=${
                 lib.makeBinPath [
                   tuned
@@ -189,7 +189,7 @@
             in
             pkgs.runCommand "module-wiring"
               {
-                nativeBuildInputs = [ pkgs.jq ];
+                nativeBuildInputs = with pkgs; [ jq ];
                 dump = builtins.toJSON wiring;
                 passAsFile = [ "dump" ];
               }
@@ -206,15 +206,15 @@
           scripts-lint =
             pkgs.runCommand "scripts-lint"
               {
-                nativeBuildInputs = [
+                nativeBuildInputs = with pkgs; [
                   # check-sh.sh below is moving to reading the script it is given as a tree,
                   # out of `shfmt --to-json`, with jq flattening that tree into rows. This
                   # sandbox has a scrubbed PATH, so the jq named on module-wiring above is
                   # not reachable here and the tool has to be named on this derivation too
-                  pkgs.jq
-                  pkgs.shellcheck
-                  pkgs.shfmt
-                  pkgs.zsh
+                  jq
+                  shellcheck
+                  shfmt
+                  zsh
                 ];
               }
               ''
@@ -243,16 +243,16 @@
           installer-suite =
             pkgs.runCommand "installer-suite"
               {
-                nativeBuildInputs = [
-                  pkgs.bash
-                  pkgs.coreutils
-                  pkgs.curl
-                  pkgs.findutils
-                  pkgs.gawk
-                  pkgs.gnugrep
-                  pkgs.gnused
-                  pkgs.jq
-                  pkgs.pup
+                nativeBuildInputs = with pkgs; [
+                  bash
+                  coreutils
+                  curl
+                  findutils
+                  gawk
+                  gnugrep
+                  gnused
+                  jq
+                  pup
                 ];
               }
               ''
