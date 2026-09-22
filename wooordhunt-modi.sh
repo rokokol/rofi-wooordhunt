@@ -243,8 +243,8 @@ TRANSCRIPTION_UK=$(format_transcriptions "$TR_ROWS" uk)
 
 if [[ -n "$TRANSCRIPTION_US" || -n "$TRANSCRIPTION_UK" ]]; then
   print_message "🇺🇸: ${TRANSCRIPTION_US} // 🇬🇧: ${TRANSCRIPTION_UK}"
-# Anything outside printable ASCII means the query was not an English word. A а-я range
-# would say the same, but ranges need a collation the C.UTF-8 locale above does not carry
+# Anything outside printable ASCII means the query was not an English word. An "а-я" range
+# would say the same, but a range needs a collation the C.UTF-8 locale above does not carry
 elif [[ "$PARSED_INPUT" == *[^\ -~]* ]]; then
   print_message "🇷🇺: ${ORIGINAL_INPUT} （´ω｀♡%）"
 fi
