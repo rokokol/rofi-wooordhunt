@@ -21,7 +21,7 @@ utf8_ready() {
 [[ -n "${ROFI_WOOORDHUNT_LOCALE:-}" ]] && export LC_ALL="$ROFI_WOOORDHUNT_LOCALE"
 if ! utf8_ready; then
   # Nothing to restore if none of them takes: an unknown name leaves glibc in C, which
-  # is where we already were
+  # is where the locale started
   for loc in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
     export LC_ALL="$loc"
     utf8_ready && break
@@ -74,7 +74,7 @@ print_failure() {
 # Break text into lines of at most $1 characters, at spaces. This is `fold -s -w`, done
 # here because fold only learned to count characters in coreutils 9.8 — anything older
 # counts bytes and wraps Cyrillic at half the asked width. bash counts characters in any
-# UTF-8 locale, which is what the block above makes sure we are in
+# UTF-8 locale, and the block above puts the script into one
 wrap_words() {
   local width="$1" line="" word
   local -a words
@@ -105,8 +105,8 @@ wrap_words() {
   fi
 }
 
-# Print a long hint under the translation. rofi rows are single-line, so we wrap
-# manually and emit one line per item. The lines are non-selectable (skipped during
+# Print a long hint under the translation. rofi rows are single-line, so the text wraps
+# here and goes out one line per item. The lines are non-selectable (skipped during
 # navigation) and carry the English word as the copy value, so a stray activation
 # still copies something meaningful
 print_hint_lines() {
@@ -135,7 +135,7 @@ fi
 ORIGINAL_INPUT=$(squeeze "$INPUT")
 PARSED_INPUT="${ORIGINAL_INPUT,,}"
 # wooordhunt uses underscores for multi-word phrases (e.g. give_up); a bare space
-# in the URL breaks curl, so we collapse spaces into "_"
+# in the URL breaks curl, so every space becomes "_"
 URL_SLUG="${PARSED_INPUT// /_}"
 
 # -S beside -s: quiet about progress, but still says what went wrong, and that line is
@@ -156,8 +156,8 @@ curl_said() {
 # "<us-transcription>\t<uk-transcription>\t<part of speech>". Homographs (e.g.
 # transfer as a noun and a verb) come as several us/uk blocks with a shared id
 # inside <div class="trans_sound">, each preceded by a label like
-# "глагол произносится"; we walk the block in order, saving each form and marking it
-# with the part-of-speech word from the site itself (the first label token, empty
+# "глагол произносится". The walk goes through the block in order, saves each form and
+# marks it with the part-of-speech word from the site itself (the first label token, empty
 # for words with a single form)
 # Arguments: $1 = HTML
 parse_transcriptions() {
@@ -251,8 +251,8 @@ fi
 
 if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
   # Each sub_entry is one meaning group: one or several synonym words (e.g.
-  # "exam / examination") with a shared "— gloss" list and one explanation. We parse
-  # section by section via JSON so words, glosses and meanings don't drift — flat
+  # "exam / examination") with a shared "— gloss" list and one explanation. The parse
+  # goes section by section via JSON so words, glosses and meanings don't drift — flat
   # text drifts when a section has several words or no meaning
   SECTIONS=$(printf '%s' "$HTML" | pup 'section.sub_entry json{}' 2>/dev/null | jq -r '
     .[] |
@@ -296,7 +296,7 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
     gloss=$(squeeze "$gloss")
     meaning=$(squeeze "$meaning")
 
-    # The first word is what we copy; build head with each word's transcription
+    # The first word is the one the row copies; head carries each word's transcription
     mapfile -t wlist < <(printf '%s\n' "$words" | sed 's@ / @\n@g')
     copy_word=$(squeeze "${wlist[0]}")
     head=""
@@ -330,8 +330,8 @@ MEANINGS_LIST=""
 if printf '%s' "$HTML" | grep -q 'class="t_inline_en"'; then
   MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup '.t_inline_en text{}' 2>/dev/null)")
 else
-  # One translation per span child. We collapse each span's HTML manually rather
-  # than via `text{}`, because a span may wrap an introductory word in its own tag
+  # One translation per span child. The awk below collapses each span's HTML rather
+  # than `text{}`, because a span may wrap an introductory word in its own tag
   # (e.g. "<i>(чрезмерно)</i> подчёркивать"); text{} would emit that as two lines
   # and split one meaning into two items
   TR_SPANS=$(printf '%s' "$HTML" | pup '.tr > span' 2>/dev/null | awk '
