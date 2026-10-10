@@ -7,6 +7,7 @@
 ![rofi](https://img.shields.io/badge/rofi-script--modi-F4A100?style=flat)
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 ![Nix](https://img.shields.io/badge/Nix-flake-7EBAE4?style=flat&logo=nixos&logoColor=white)
+[![FlakeHub](https://img.shields.io/endpoint?url=https://flakehub.com/f/rokokol/rofi-wooordhunt/badge)](https://flakehub.com/flake/rokokol/rofi-wooordhunt)
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/build.yml)
 [![debian](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml/badge.svg)](https://github.com/rokokol/rofi-wooordhunt/actions/workflows/distro-debian.yml)
