@@ -326,6 +326,60 @@ if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
   exit 0
 fi
 
+# English words come in a second layout: one article that groups senses under a
+# part-of-speech heading, which no selector below matches
+if printf '%s' "$HTML" | grep -q 'id="en_ru_v2"'; then
+  SENSES=$(printf '%s' "$HTML" | pup 'article#en_ru_v2 json{}' 2>/dev/null | jq -r '
+    .[0].children
+    | reduce .[] as $n ({pos: "", rows: []};
+        if (($n.class // "") | test("pos_header")) then
+          .pos = (($n.text // "") | gsub("^\\s+|\\s+$"; ""))
+        elif (($n.class // "") == "pos_block") then
+          .pos as $p
+          | .rows += [
+              $n.children[]?
+              | select((.class // "") | test("pos_data"))
+              | .children as $ch
+              # A sense is its equivalents span and the gloss after it; the examples in the
+              # same section are not part of the answer
+              | {pos: $p,
+                 eq: ([$ch[] | select((.tag // "") == "p") | .children[]?
+                       | select((.class // "") | test("equivalents")) | .text] | first // ""),
+                 ex: ([$ch[] | select((.class // "") | test("explanation")) | .text] | first // "")}
+            ]
+        else . end)
+    | .rows[]
+    | [.pos, (.eq | gsub("^\\s+|\\s+$"; "")), (.ex | gsub("^\\s+|\\s+$"; ""))]
+    | @tsv
+  ' 2>/dev/null || true)
+
+  if [[ -z "$SENSES" ]]; then
+    print_failure "Failed to parse the senses of ${PARSED_INPUT} (T＿T)" "$SOURCE_URL"
+    exit 0
+  fi
+
+  # The heading earns a line only when the word has more than one part of speech: that is
+  # the split the header transcriptions already mark, and the list has to follow suit
+  show_pos=0
+  if (($(printf '%s\n' "$SENSES" | cut -f1 | sort -u | grep -c .) > 1)); then
+    show_pos=1
+  fi
+
+  last_pos=""
+  while IFS=$'\t' read -r pos eq meaning; do
+    [[ -z "$eq" ]] && continue
+    pos=$(squeeze "$pos")
+    meaning=$(squeeze "$meaning")
+    if ((show_pos)) && [[ "$pos" != "$last_pos" ]]; then
+      print_hint_lines "$pos" "$PARSED_INPUT"
+      last_pos="$pos"
+    fi
+    print_entry "$eq" "$eq"
+    [[ -n "$meaning" ]] && print_hint_lines "$meaning" "$eq"
+  done < <(printf '%s\n' "$SENSES")
+  exit 0
+fi
+
 MEANINGS_LIST=""
 if printf '%s' "$HTML" | grep -q 'class="t_inline_en"'; then
   MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup '.t_inline_en text{}' 2>/dev/null)")

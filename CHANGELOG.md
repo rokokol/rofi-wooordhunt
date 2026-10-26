@@ -2,6 +2,12 @@
 
 Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned by [semver](https://semver.org/spec/v2.0.0.html)
 
+## [Unreleased]
+
+### Fixed
+
+- English lookups read the newer page the site serves for them: one row per sense, the site's explanation below the row, and the senses of a homograph under their part of speech. The older layout is still read when a page comes in it
+
 ## [1.1.1] - 2026-09-21
 
 ### Changed

@@ -115,13 +115,13 @@
                   ]
                 }
                 modi=${rofi-wooordhunt}/libexec/wooordhunt-modi
-                mkdir -p pages/word
-                ln -s ${testsDir}/fixtures/house.html pages/word/house
+                mkdir -p pages/переводы
+                ln -s ${testsDir}/fixtures/house-v2.html pages/переводы/house
                 export ROFI_WOOORDHUNT_URL="file://$PWD/pages"
 
                 # No grep -q on a pipe: it closes the pipe early and the writer sees EPIPE
                 ROFI_RETV=1 $modi house | tr '\000\037' '@|' >out
-                grep -xF 'дом@info|дом' out >/dev/null
+                grep -xF 'дом; жилой дом; здание; особняк@info|дом; жилой дом; здание; особняк' out >/dev/null
                 grep -F '@message|🇺🇸: |haʊs|' out >/dev/null
                 # The mode must name itself, without anything in rofi.rasi
                 ROFI_RETV=0 $modi | tr '\000\037' '@|' | grep -xF '@prompt|🤓' >/dev/null

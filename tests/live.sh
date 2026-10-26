@@ -29,7 +29,10 @@ expect() {
 
 echo "live wooordhunt.ru"
 expect "EN word: transcription in the header" '@message\|🇺🇸: \|' house
-expect "EN word: translations as entries" '^дом@info\|дом$' house
+expect "EN word: translations as entries" '^дом; .*@info\|дом; ' house
+# The newer English page glosses every sense and splits a homograph by part of speech
+expect "EN word: a sense gloss wrapped below" '^   .*@info\|.*\|nonselectable\|true$' house
+expect "EN homograph: a heading per part of speech" '^   [^@]+@info\|transfer\|nonselectable\|true$' transfer
 expect "EN homograph: a transcription per part of speech" '@message\|.*\(.*\).*,.*\(.*\)' transfer
 # A page is only found at all if the space became an underscore, and only a found page
 # carries a transcription — so the header is the assertion about the slug
