@@ -359,7 +359,8 @@ if printf '%s' "$HTML" | grep -q 'id="en_ru_v2"'; then
   fi
 
   # The heading earns a line only when the word has more than one part of speech: that is
-  # the split the header transcriptions already mark, and the list has to follow suit
+  # the split the header transcriptions already mark, and the list has to follow suit. It
+  # is set in capitals to read as a separator, not as one more sense
   show_pos=0
   if (($(printf '%s\n' "$SENSES" | cut -f1 | sort -u | grep -c .) > 1)); then
     show_pos=1
@@ -371,7 +372,7 @@ if printf '%s' "$HTML" | grep -q 'id="en_ru_v2"'; then
     pos=$(squeeze "$pos")
     meaning=$(squeeze "$meaning")
     if ((show_pos)) && [[ "$pos" != "$last_pos" ]]; then
-      print_hint_lines "$pos" "$PARSED_INPUT"
+      print_hint_lines "${pos^^}" "$PARSED_INPUT"
       last_pos="$pos"
     fi
     print_entry "$eq" "$eq"
