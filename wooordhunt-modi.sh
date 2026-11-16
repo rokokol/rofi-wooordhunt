@@ -249,7 +249,15 @@ elif [[ "$PARSED_INPUT" == *[^\ -~]* ]]; then
   print_message "🇷🇺: ${ORIGINAL_INPUT} （´ω｀♡%）"
 fi
 
-if printf '%s' "$HTML" | grep -q 'class="sub_entry"'; then
+# Does the page carry this marker? Not `printf | grep -q`: grep leaves as soon as it matches
+# and closes the pipe, while printf is still handing the page over in 4096-byte chunks. The
+# next chunk meets the closed pipe, and pipefail then makes the `if` read false with the
+# marker right there on the page. Bash's own search has no pipe to break
+page_has() {
+  [[ "$HTML" == *"$1"* ]]
+}
+
+if page_has 'class="sub_entry"'; then
   # Each sub_entry is one meaning group: one or several synonym words (e.g.
   # "exam / examination") with a shared "— gloss" list and one explanation. The parse
   # goes section by section via JSON so words, glosses and meanings don't drift — flat
@@ -328,7 +336,7 @@ fi
 
 # English words come in a second layout: one article that groups senses under a
 # part-of-speech heading, which no selector below matches
-if printf '%s' "$HTML" | grep -q 'id="en_ru_v2"'; then
+if page_has 'id="en_ru_v2"'; then
   SENSES=$(printf '%s' "$HTML" | pup 'article#en_ru_v2 json{}' 2>/dev/null | jq -r '
     .[0].children
     | reduce .[] as $n ({pos: "", rows: []};
@@ -382,7 +390,7 @@ if printf '%s' "$HTML" | grep -q 'id="en_ru_v2"'; then
 fi
 
 MEANINGS_LIST=""
-if printf '%s' "$HTML" | grep -q 'class="t_inline_en"'; then
+if page_has 'class="t_inline_en"'; then
   MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup '.t_inline_en text{}' 2>/dev/null)")
 else
   # One translation per span child. The awk below collapses each span's HTML rather
@@ -402,7 +410,7 @@ else
   ' || true)
   if [[ -n "$TR_SPANS" ]]; then
     MEANINGS_LIST="$TR_SPANS"
-  elif printf '%s' "$HTML" | grep -q 'class="t_inline"'; then
+  elif page_has 'class="t_inline"'; then
     MEANINGS_LIST=$(squeeze "$(printf '%s' "$HTML" | pup 'p.t_inline:first-of-type text{}' 2>/dev/null)")
   else
     TR_TEXT=$(printf '%s' "$HTML" | pup '.tr text{}' 2>/dev/null | sed -n 's/^[[:space:]]*-[[:space:]]*//p' || true)
