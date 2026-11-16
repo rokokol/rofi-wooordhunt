@@ -31,7 +31,7 @@ jobs:
           }
       - run: nix build --no-write-lock-file .#rofi-wooordhunt
       # tests, package-smoke, package-settings, module-wiring, scripts-lint
-      - run: nix flake check --no-write-lock-file
+      - run: nix flake check --no-write-lock-file -L
       # The scripts must stay usable without Nix: install.sh puts the launcher behind a
       # symlink, keeps the modi off bin, and the suite has to pass against both copies
       - name: install.sh works

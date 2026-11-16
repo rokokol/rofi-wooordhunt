@@ -46,6 +46,7 @@ let
     var: value: lib.optionalString (value != null) ''--set-default ${var} "${toString value}"'';
 
   runtimeInputs = [
+    bash
     coreutils
     curl
     findutils

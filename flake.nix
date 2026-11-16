@@ -120,7 +120,8 @@
                 export ROFI_WOOORDHUNT_URL="file://$PWD/pages"
 
                 # No grep -q on a pipe: it closes the pipe early and the writer sees EPIPE
-                ROFI_RETV=1 $modi house | tr '\000\037' '@|' >out
+                ROFI_RETV=1 $modi house 2>modi.err | tr '\000\037' '@|' >out
+                test ! -s modi.err || { echo "the modi wrote to stderr on a plain lookup:"; cat modi.err; exit 1; }
                 grep -xF 'дом; жилой дом; здание; особняк@info|дом; жилой дом; здание; особняк' out >/dev/null
                 grep -F '@message|🇺🇸: |haʊs|' out >/dev/null
                 # The mode must name itself, without anything in rofi.rasi
@@ -130,7 +131,7 @@
                 # The launcher has to hand rofi the modi of its own derivation, and pass
                 # a query on as the initial filter — a stub rofi just prints its arguments
                 mkdir -p stub
-                printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' >stub/rofi
+                printf '#!%s\nprintf "%%s\\n" "$@"\n' ${pkgs.bash}/bin/bash >stub/rofi
                 chmod +x stub/rofi
                 PATH=$PWD/stub:$PATH rofi-wooordhunt "два слова" >launched
                 grep -xF "dictionary:$modi" launched >/dev/null ||
